@@ -1,0 +1,7 @@
+version: "2"
+authtoken: 2tqHPEDvF2c7LbZEWIrq3dswt5f_4WEFst1Mh2RRg6wZ1sJBj
+
+tunnels:
+  myapp:
+    proto: http
+    addr: 8080

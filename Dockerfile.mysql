@@ -1,0 +1,11 @@
+FROM mysql:8.0
+
+# Copy custom MySQL configuration
+COPY my.cnf /etc/mysql/conf.d/custom.cnf
+
+# Set timezone
+ENV TZ=Asia/Ho_Chi_Minh
+
+EXPOSE 3306
+
+CMD ["mysqld"]

@@ -1,0 +1,54 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Build outputs
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Documentation
+*.md
+docs/
+.history/
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.yaml
+
+# Railway
+.railway/
+railway.json
+
+# Logs
+*.log
+logs/
+
+# Test
+src/test/
+
+# Other
+dummy
+ngrok.yml
