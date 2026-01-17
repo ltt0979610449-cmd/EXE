@@ -1,0 +1,82 @@
+# Railway Environment Variables Template
+# Copy các biến này vào Railway Dashboard → Service → Variables
+
+# ============================================
+# SPRING CONFIGURATION
+# ============================================
+SPRING_PROFILES_ACTIVE=prod
+PORT=8080
+
+# ============================================
+# DATABASE CONNECTION
+# ============================================
+# Lưu ý: Railway tự tạo MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE, MYSQLPORT
+# Bạn cần tạo connection string từ các giá trị đó:
+# 
+# Cách 1: Dùng variable reference (nếu Railway hỗ trợ)
+DBMS_CONNECTION=jdbc:mysql://${MYSQLHOST}:${MYSQLPORT}/${MYSQLDATABASE}?useSSL=true&serverTimezone=Asia/Ho_Chi_Minh
+DBMS_USERNAME=${MYSQLUSER}
+DBMS_PASSWORD=${MYSQLPASSWORD}
+#
+# Cách 2: Set giá trị thực tế (sau khi có MySQL service)
+# 1. Vào MySQL service → Variables tab
+# 2. Copy các giá trị MYSQLHOST, MYSQLPORT, MYSQLDATABASE, MYSQLUSER, MYSQLPASSWORD
+# 3. Thay thế vào dưới đây:
+# DBMS_CONNECTION=jdbc:mysql://[MYSQLHOST_VALUE]:[MYSQLPORT_VALUE]/[MYSQLDATABASE_VALUE]?useSSL=true&serverTimezone=Asia/Ho_Chi_Minh
+# DBMS_USERNAME=[MYSQLUSER_VALUE]
+# DBMS_PASSWORD=[MYSQLPASSWORD_VALUE]
+
+# ============================================
+# JWT CONFIGURATION
+# ============================================
+JWT_SIGNER_KEY=your-secret-key-here-change-this
+JWT_VALID_DURATION=86400000
+JWT_REFRESHABLE_DURATION=604800000
+
+# ============================================
+# MAIL CONFIGURATION
+# ============================================
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-gmail-app-password
+
+# ============================================
+# OAUTH2 GOOGLE CONFIGURATION
+# ============================================
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+# ⚠️ Cập nhật sau khi có Railway domain
+GOOGLE_REDIRECT_URI=https://your-app.railway.app/login/oauth2/code/google
+OAUTH2_REDIRECT_SUCCESS=https://your-frontend-url.com/oauth2/callback
+
+# ============================================
+# MOMO PAYMENT CONFIGURATION
+# ============================================
+MOMO_PARTNER_CODE=your-partner-code
+MOMO_ACCESS_KEY=your-access-key
+MOMO_SECRET_KEY=your-secret-key
+# ⚠️ Cập nhật sau khi có Railway domain
+MOMO_REDIRECT_URL=https://your-app.railway.app/api/public/payment/momo-return
+MOMO_NOTIFY_URL=https://your-app.railway.app/api/public/payment/momo-notify
+
+# ============================================
+# CLOUDINARY CONFIGURATION
+# ============================================
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+
+# ============================================
+# ADMIN CONFIGURATION
+# ============================================
+INITIAL_ADMIN_PASSWORD=your-admin-password
+
+# ============================================
+# NOTES
+# ============================================
+# 1. Thay thế tất cả giá trị "your-*" bằng giá trị thực tế
+# 2. Sau khi Railway generate domain, cập nhật lại:
+#    - GOOGLE_REDIRECT_URI
+#    - MOMO_REDIRECT_URL
+#    - MOMO_NOTIFY_URL
+# 3. Database connection: Railway tự tạo MySQL và set MYSQL* vars
+#    Bạn cần tạo DBMS_CONNECTION từ các giá trị đó
