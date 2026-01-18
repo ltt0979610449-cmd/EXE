@@ -97,7 +97,7 @@ public class SecurityConfig {
                         .title("CoiViet")
                         .version("1.0")
                         .description("API documentation for the CoiViet System"))
-                .addServersItem(new Server().url("https://legally-actual-mollusk.ngrok-free.app/"));
+                .addServersItem(new Server().url("https://exe-1-k8ma.onrender.com/"));
     }
 
     @Bean
