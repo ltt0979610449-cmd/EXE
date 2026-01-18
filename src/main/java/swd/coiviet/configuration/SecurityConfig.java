@@ -111,6 +111,8 @@ public class SecurityConfig {
         configuration.addAllowedOriginPattern("https://*.railway.app");
         configuration.addAllowedOriginPattern("https://*.up.railway.app");
         configuration.addAllowedOriginPattern("http://localhost:8080");
+        configuration.addAllowedOriginPattern("https://*.onrender.com");
+        configuration.addAllowedOrigin("https://exe-1-k8ma.onrender.com");
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         configuration.setAllowCredentials(true);
