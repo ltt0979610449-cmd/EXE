@@ -7,10 +7,11 @@ spring:
     exclude:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
-  
-  # CÁCH 1: Dùng DATABASE_URL (KHUYÊN DÙNG)
   datasource:
-    url: ${DATABASE_URL}
+    url: jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=require
+    username: ${PGUSER}
+    password: ${PGPASSWORD}
+    driver-class-name: org.postgresql.Driver
     hikari:
       connection-timeout: 30000
       maximum-pool-size: 10
@@ -18,44 +19,37 @@ spring:
       idle-timeout: 300000
       max-lifetime: 1800000
       initialization-fail-timeout: 1
-  
-  # CÁCH 2: Nếu muốn dùng biến riêng (uncomment nếu dùng)
-  # datasource:
-  #   url: jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=require
-  #   username: ${PGUSER}
-  #   password: ${PGPASSWORD}
-  
+      leak-detection-threshold: 60000
+      register-mbeans: true
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
-    # XÓA: database-platform
     properties:
       hibernate:
-        # XÓA: dialect
         jdbc:
           lob:
             non_contextual_creation: true
           time_zone: Asia/Ho_Chi_Minh
         format_sql: false
         use_sql_comments: false
-        # SỬA: temp.use_jdbc_metadata_defaults → boot.allow_jdbc_metadata_access
         boot:
           allow_jdbc_metadata_access: false
-  
   sql:
     init:
       mode: never
-  
   flyway:
     enabled: false
-  
+    baseline-on-migrate: true
+    locations: classpath:db/migration
   jackson:
     time-zone: Asia/Ho_Chi_Minh
     date-format: yyyy-MM-dd HH:mm:ss
     serialization:
       write-dates-as-timestamps: false
-  
+      fail-on-empty-beans: false
+    deserialization:
+      fail-on-unknown-properties: false
   mail:
     host: smtp.gmail.com
     port: 587
@@ -67,7 +61,7 @@ spring:
           auth: true
           starttls:
             enable: true
-  
+          debug: false
   security:
     oauth2:
       client:
@@ -85,7 +79,6 @@ spring:
             token-uri: https://oauth2.googleapis.com/token
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: email
-  
   servlet:
     multipart:
       max-file-size: 10MB
