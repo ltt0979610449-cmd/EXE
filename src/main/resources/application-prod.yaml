@@ -1,7 +1,7 @@
-# Production profile configuration cho Railway.app deployment
+# Production profile configuration
 
 server:
-  port: ${PORT:8080}  # Hỗ trợ PORT env var từ các platform (Render, Railway, etc.)
+  port: ${PORT:8080}
 
 spring:
   autoconfigure:

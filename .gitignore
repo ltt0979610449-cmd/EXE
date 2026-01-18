@@ -35,8 +35,6 @@ build/
 ### Docker ###
 .docker/
 
-### Railway ###
-.railway/
 
 ### Environment files ###
 .env.local

@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import swd.coiviet.enums.Gender;
 import swd.coiviet.enums.Role;
 import swd.coiviet.enums.Status;
@@ -29,6 +30,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
         // Không cần tạo entity Role, chỉ cần kiểm tra và tạo user admin với role là enum
         if (!userRepository.findByUsername("admin").isPresent()) {
