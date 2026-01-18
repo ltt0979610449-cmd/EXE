@@ -1,0 +1,113 @@
+services:
+  # LƯU Ý: Render chủ yếu hỗ trợ PostgreSQL, không phải MySQL
+  # Có 2 options:
+  # 1. Sử dụng PostgreSQL và migrate code (recommended)
+  # 2. Sử dụng external MySQL service (PlanetScale, AWS RDS, DigitalOcean, etc.)
+  # 
+  # Nếu sử dụng PostgreSQL trên Render:
+  - type: pserv
+    name: coiviet-db
+    plan: starter  # Free tier có limitations, starter $7/month
+    region: singapore
+    # PostgreSQL sẽ tự động tạo database và user
+    
+  # Spring Boot Backend Web Service
+  - type: web
+    name: coiviet-api
+    runtime: docker
+    plan: free  # Free tier - có thể upgrade lên starter ($7/month) cho production
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      # Spring Profile
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      
+      # Database Connection - PostgreSQL
+      # Render tự động tạo các biến sau khi link PostgreSQL:
+      # - DATABASE_URL (PostgreSQL connection string)
+      # - DATABASE_HOST
+      # - DATABASE_PORT (thường 5432 cho PostgreSQL)
+      # - DATABASE_NAME
+      # - DATABASE_USER
+      # - DATABASE_PASSWORD
+      #
+      # Format JDBC URL cho PostgreSQL:
+      - key: DBMS_CONNECTION
+        value: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?sslmode=require
+        # Render sẽ tự động inject DATABASE_HOST, DATABASE_PORT, DATABASE_NAME khi link database
+      
+      - key: DBMS_USERNAME
+        fromService:
+          name: coiviet-db
+          type: pserv
+          property: user
+      
+      - key: DBMS_PASSWORD
+        fromService:
+          name: coiviet-db
+          type: pserv
+          property: password
+      
+      # JWT Configuration
+      - key: JWT_SIGNER_KEY
+        sync: false  # Cần set thủ công trong Render Dashboard
+      
+      - key: JWT_VALID_DURATION
+        value: "86400"  # 24 hours
+      
+      - key: JWT_REFRESHABLE_DURATION
+        value: "36000"  # 10 hours
+      
+      # Cloudinary Configuration
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false  # Cần set thủ công
+      
+      - key: CLOUDINARY_API_KEY
+        sync: false  # Cần set thủ công
+      
+      - key: CLOUDINARY_API_SECRET
+        sync: false  # Cần set thủ công
+      
+      # Email Configuration
+      - key: MAIL_USERNAME
+        sync: false  # Cần set thủ công
+      
+      - key: MAIL_PASSWORD
+        sync: false  # Cần set thủ công
+      
+      # MoMo Payment Configuration
+      - key: MOMO_PARTNER_CODE
+        sync: false  # Cần set thủ công
+      
+      - key: MOMO_ACCESS_KEY
+        sync: false  # Cần set thủ công
+      
+      - key: MOMO_SECRET_KEY
+        sync: false  # Cần set thủ công
+      
+      - key: MOMO_REDIRECT_URL
+        sync: false  # Sẽ là: https://coiviet-api.onrender.com/api/public/payment/momo-return
+      
+      - key: MOMO_NOTIFY_URL
+        sync: false  # Sẽ là: https://coiviet-api.onrender.com/api/public/payment/momo-notify
+      
+      # Google OAuth2 Configuration
+      - key: GOOGLE_CLIENT_ID
+        sync: false  # Cần set thủ công
+      
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false  # Cần set thủ công
+      
+      - key: GOOGLE_REDIRECT_URI
+        sync: false  # Sẽ là: https://coiviet-api.onrender.com/login/oauth2/code/google
+      
+      - key: OAUTH2_REDIRECT_SUCCESS
+        sync: false  # Frontend callback URL
+      
+      # Admin Configuration
+      - key: INITIAL_ADMIN_PASSWORD
+        sync: false  # Cần set thủ công
+    healthCheckPath: /actuator/health
+    autoDeploy: true  # Tự động deploy khi push code

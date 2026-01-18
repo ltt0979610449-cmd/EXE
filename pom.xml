@@ -29,10 +29,6 @@
             <id>central</id>
             <url>https://repo1.maven.org/maven2/</url>
         </repository>
-        <repository>
-            <id>mysql</id>
-            <url>https://repo.mysql.com/</url>
-        </repository>
     </repositories>
 
     <dependencies>
@@ -98,8 +94,8 @@
 
         <!-- Database -->
         <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>

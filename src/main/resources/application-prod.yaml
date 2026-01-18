@@ -9,11 +9,13 @@ spring:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
   datasource:
-    url: ${DBMS_CONNECTION}
-    username: ${DBMS_USERNAME}
-    password: ${DBMS_PASSWORD}
+    # Render sẽ cung cấp DATABASE_URL hoặc các biến riêng lẻ
+    # Format JDBC PostgreSQL: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?sslmode=require
+    url: ${DBMS_CONNECTION:jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?sslmode=require}
+    username: ${DBMS_USERNAME:${DATABASE_USER}}
+    password: ${DBMS_PASSWORD:${DATABASE_PASSWORD}}
     hikari:
-      connection-timeout: 120000  # 120 seconds timeout (tăng lên để đợi MySQL khởi động)
+      connection-timeout: 120000  # 120 seconds timeout (tăng lên để đợi database khởi động)
       maximum-pool-size: 10
       minimum-idle: 2
       idle-timeout: 300000  # 5 minutes
@@ -27,10 +29,10 @@ spring:
     hibernate:
       ddl-auto: update  # Có thể chuyển sang 'validate' hoặc 'none' nếu dùng Flyway
     show-sql: false  # Tắt SQL logging trong production
-    database-platform: org.hibernate.dialect.MySQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc:
           time_zone: Asia/Ho_Chi_Minh
         format_sql: false
@@ -41,7 +43,9 @@ spring:
     init:
       mode: never  # Tắt SQL init để tránh lỗi khi database chưa sẵn sàng
   flyway:
-    enabled: false  # Có thể enable nếu muốn dùng Flyway migrations
+    enabled: false  # Set true để enable Flyway migrations (xem db/migration/README.md)
+    baseline-on-migrate: true  # Tạo baseline nếu database đã có schema
+    locations: classpath:db/migration
   jackson:
     time-zone: Asia/Ho_Chi_Minh
     date-format: yyyy-MM-dd HH:mm:ss
