@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import swd.coiviet.configuration.JwtUtil;
 import swd.coiviet.dto.request.GoogleLoginRequest;
 import swd.coiviet.dto.request.LoginRequest;
@@ -58,6 +59,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
         // Find user by username
         User user = userService.findByUsername(request.getUsername())
@@ -95,6 +97,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public AuthResponse loginWithGoogle(GoogleLoginRequest request) {
         GoogleIdToken idToken;
         try {
@@ -144,6 +147,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AuthResponse refreshToken(RefreshTokenRequest request) {
         try {
             if (!jwtUtil.canRefreshToken(request.getRefreshToken())) {
@@ -220,6 +224,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public void forgotPassword(String email) {
         User user = userService.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Email không tồn tại trong hệ thống"));
@@ -258,6 +263,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public boolean verifyOtp(String email, String otp) {
         User user = userService.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Email không tồn tại trong hệ thống"));
@@ -295,6 +301,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public void resetPassword(String email, String otp, String newPassword) {
         // Verify OTP first
         verifyOtp(email, otp);

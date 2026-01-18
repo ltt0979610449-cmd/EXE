@@ -38,9 +38,6 @@ Dockerfile
 docker-compose.yml
 docker-compose.yaml
 
-# Railway
-.railway/
-railway.json
 
 # Logs
 *.log
