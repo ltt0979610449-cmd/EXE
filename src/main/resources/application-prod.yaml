@@ -23,7 +23,7 @@ spring:
       register-mbeans: true
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: false
     properties:
       hibernate:
@@ -34,7 +34,7 @@ spring:
         format_sql: false
         use_sql_comments: false
         boot:
-          allow_jdbc_metadata_access: false
+          allow_jdbc_metadata_access: true
   sql:
     init:
       mode: never
