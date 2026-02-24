@@ -78,8 +78,11 @@ public class AuthServiceImpl implements AuthService {
             throw new AppException(ErrorCode.INVALID_CREDENTIALS, "Tên đăng nhập hoặc mật khẩu không đúng");
         }
 
+        // Role có thể null với user cũ tạo trước khi fix (default CUSTOMER)
+        Role effectiveRole = user.getRole() != null ? user.getRole() : Role.CUSTOMER;
+
         // Generate tokens
-        String accessToken = jwtUtil.generateToken(user.getUsername(), user.getRole().name(), user.getId().intValue());
+        String accessToken = jwtUtil.generateToken(user.getUsername(), effectiveRole.name(), user.getId().intValue());
         String refreshToken = jwtUtil.refreshToken(accessToken);
 
         logger.info("User {} logged in successfully", user.getUsername());
@@ -91,7 +94,7 @@ public class AuthServiceImpl implements AuthService {
                 .userId(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .role(user.getRole())
+                .role(effectiveRole)
                 .expiresIn(jwtUtil.getExpiration())
                 .build();
     }

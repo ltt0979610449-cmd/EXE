@@ -145,6 +145,16 @@ public class CloudinaryService {
         return uploadMultipleImagesAsync(files, folder, "culture");
     }
 
+    public String uploadLearnModuleThumbnail(MultipartFile file, Long moduleId) throws IOException {
+        String folder = String.format("learn/modules/%d/thumbnail", moduleId == null ? 0 : moduleId);
+        return uploadImage(file, folder, "culture");
+    }
+
+    public String uploadLearnLessonImage(MultipartFile file, Long lessonId) throws IOException {
+        String folder = String.format("learn/lessons/%d/images", lessonId == null ? 0 : lessonId);
+        return uploadImage(file, folder, "culture");
+    }
+
     public String uploadVideoThumbnail(MultipartFile file, Long videoId) throws IOException {
         String folder = String.format("videos/%d/thumbnail", videoId == null ? 0 : videoId);
         return uploadImage(file, folder, "video");

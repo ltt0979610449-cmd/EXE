@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -22,6 +23,7 @@ import org.springframework.http.HttpMethod;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
     @Autowired
     private JwtFilter jwtFilter;
@@ -40,9 +42,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/public/**", "/api/auth/**", "/swagger-ui/**",
                                 "/v3/api-docs/**", "/swagger-ui.html", "/api/v1/shipments/**",
                                 "/oauth2/**", "/login/oauth2/**", "/ws/**").permitAll()
+                        // Đăng ký tài khoản (POST /api/users) - không cần auth
+                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
 
                         // Upload endpoints: require authentication
-                        .requestMatchers("/api/upload/**").hasAnyRole("USER", "STAFF", "ADMIN", "ARTISAN")
+                        .requestMatchers("/api/upload/**").hasAnyRole("CUSTOMER", "ARTISAN", "ADMIN")
 
                 // Public tour/province endpoints (for browsing)
                 .requestMatchers("/api/tours/public/**", "/api/provinces/public/**", 
@@ -50,7 +54,8 @@ public class SecurityConfig {
                         "/api/blog-posts/public/**", "/api/videos/public/**",
                         "/api/reviews/tour/**", "/api/public/home/**",
                         "/api/user-memories/public/**", "/api/vouchers/public/**",
-                        "/api/payments/momo/**", "/api/payments/vnpay/**").permitAll()
+                        "/api/payments/momo/**", "/api/payments/vnpay/**",
+                        "/api/learn/public/**").permitAll()
 
                         // Admin endpoints: chỉ ADMIN
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -62,9 +67,10 @@ public class SecurityConfig {
                         "/api/culture-items/**", "/api/blog-posts", "/api/blog-posts/**",
                         "/api/videos", "/api/videos/**", "/api/vouchers", "/api/vouchers/**").hasAnyRole("STAFF", "ADMIN")
 
-                // User endpoints: USER, STAFF, ADMIN
+                // User endpoints + Learn (CUSTOMER, ARTISAN, ADMIN - Role enum thực tế)
                 .requestMatchers("/api/user/**", "/api/bookings/**", "/api/reviews/**", 
-                        "/api/user-memories/**", "/api/notifications/**", "/api/payments/**").hasAnyRole("USER", "STAFF", "ADMIN")
+                        "/api/user-memories/**", "/api/notifications/**", "/api/payments/**",
+                        "/api/learn/**").hasAnyRole("CUSTOMER", "ARTISAN", "ADMIN")
 
                         // Chat endpoints: authenticated users
                         .requestMatchers("/api/chats/**").authenticated()

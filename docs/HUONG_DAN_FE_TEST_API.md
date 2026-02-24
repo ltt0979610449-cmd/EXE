@@ -893,6 +893,7 @@ const handleApiCall = async (apiFunction) => {
 ## Tài Liệu Tham Khảo
 
 - **API Request Schemas**: Xem file `docs/api-requests.md` để biết chi tiết request body
+- **Learn API Test**: Xem file `docs/LEARN_API_TEST.md` để test API tính năng Learn (Học văn hóa)
 - **Swagger UI**: Truy cập `http://localhost:8080/swagger-ui.html` để xem API documentation
 - **Postman Collection**: Import collection từ file (nếu có)
 

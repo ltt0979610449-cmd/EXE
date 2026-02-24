@@ -12,6 +12,7 @@ import swd.coiviet.dto.request.UpdateUserRequest;
 import swd.coiviet.dto.response.ApiResponse;
 import swd.coiviet.dto.response.UserResponse;
 import swd.coiviet.mapper.UserMapper;
+import swd.coiviet.enums.Role;
 import swd.coiviet.exception.AppException;
 import swd.coiviet.exception.ErrorCode;
 import swd.coiviet.model.User;
@@ -48,6 +49,7 @@ public class UserController {
 
         User user = userMapper.toEntity(req);
         user.setPasswordHash(passwordEncoder.encode(req.getPassword()));
+        user.setRole(Role.CUSTOMER); // Mặc định role CUSTOMER khi đăng ký
         User saved = userService.save(user);
         return ResponseEntity.ok(ApiResponse.success(userMapper.toResponse(saved)));
     }
