@@ -32,4 +32,16 @@ public class Province {
     private String description;
 
     private Boolean isActive;
+
+    /** Thời điểm đẹp nhất để tham quan (e.g. "Tháng 10 - Tháng 3 (mùa khô)") */
+    @Column(columnDefinition = "text")
+    private String bestSeason;
+
+    /** Cách di chuyển đến vùng (e.g. "Xe máy, xe khách từ Pleiku") */
+    @Column(columnDefinition = "text")
+    private String transportation;
+
+    /** Lưu ý ứng xử văn hoá - JSON array hoặc text (e.g. ["Trang phục lịch sự", "Tôn trọng phong tục địa phương"]) */
+    @Column(columnDefinition = "text")
+    private String culturalTips;
 }

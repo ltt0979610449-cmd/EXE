@@ -10,14 +10,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import swd.coiviet.dto.response.ApiResponse;
+import swd.coiviet.dto.response.TourDetailResponse;
 import swd.coiviet.exception.AppException;
 import swd.coiviet.exception.ErrorCode;
+import swd.coiviet.enums.CultureCategory;
 import swd.coiviet.model.Artisan;
+import swd.coiviet.model.CultureItem;
 import swd.coiviet.model.Province;
 import swd.coiviet.model.Tour;
 import swd.coiviet.service.ArtisanService;
 import swd.coiviet.service.CloudinaryService;
 import swd.coiviet.service.ProvinceService;
+import swd.coiviet.service.TourCultureItemService;
 import swd.coiviet.service.TourService;
 
 import java.io.IOException;
@@ -33,12 +37,14 @@ public class TourController {
     private final CloudinaryService cloudinaryService;
     private final ProvinceService provinceService;
     private final ArtisanService artisanService;
+    private final TourCultureItemService tourCultureItemService;
 
-    public TourController(TourService tourService, CloudinaryService cloudinaryService, ProvinceService provinceService, ArtisanService artisanService) {
+    public TourController(TourService tourService, CloudinaryService cloudinaryService, ProvinceService provinceService, ArtisanService artisanService, TourCultureItemService tourCultureItemService) {
         this.tourService = tourService;
         this.cloudinaryService = cloudinaryService;
         this.provinceService = provinceService;
         this.artisanService = artisanService;
+        this.tourCultureItemService = tourCultureItemService;
     }
 
     @GetMapping("/public")
@@ -54,6 +60,19 @@ public class TourController {
         return ResponseEntity.ok(ApiResponse.success(tour));
     }
 
+    @GetMapping("/public/{id}/detail")
+    @Operation(summary = "Lấy chi tiết tour kèm culture items", description = "Trả về tour và danh sách culture items (địa điểm nổi bật, lễ hội, ẩm thực). Fallback theo province nếu tour chưa gắn items.")
+    public ResponseEntity<ApiResponse<TourDetailResponse>> getTourDetail(@PathVariable Long id) {
+        Tour tour = tourService.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Tour không tồn tại"));
+        List<CultureItem> cultureItems = tourCultureItemService.findCultureItemsByTourId(id);
+        TourDetailResponse response = TourDetailResponse.builder()
+                .tour(tour)
+                .cultureItems(cultureItems)
+                .build();
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @GetMapping("/public/province/{provinceId}")
     public ResponseEntity<ApiResponse<List<Tour>>> getToursByProvince(@PathVariable Long provinceId) {
         List<Tour> tours = tourService.findByProvinceId(provinceId);
@@ -64,6 +83,23 @@ public class TourController {
     public ResponseEntity<ApiResponse<List<Tour>>> getToursByArtisan(@PathVariable Long artisanId) {
         List<Tour> tours = tourService.findByArtisanId(artisanId);
         return ResponseEntity.ok(ApiResponse.success(tours));
+    }
+
+    @GetMapping("/public/{id}/culture-items")
+    @Operation(summary = "Lấy culture items của tour", description = "Lấy địa điểm nổi bật, lễ hội, ẩm thực gắn với tour. Nếu tour chưa gắn items → fallback theo province. Có thể filter theo category.")
+    public ResponseEntity<ApiResponse<List<CultureItem>>> getTourCultureItems(
+            @PathVariable Long id,
+            @RequestParam(required = false) CultureCategory category) {
+        tourService.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Tour không tồn tại"));
+        List<CultureItem> items = tourCultureItemService.findCultureItemsByTourIdAndCategory(id, category);
+        return ResponseEntity.ok(ApiResponse.success(items));
+    }
+
+    @GetMapping("/public/{id}/highlights")
+    @Operation(summary = "Lấy địa điểm nổi bật của tour", description = "Alias cho culture-items không filter. Fallback theo province nếu tour chưa gắn items.")
+    public ResponseEntity<ApiResponse<List<CultureItem>>> getTourHighlights(@PathVariable Long id) {
+        return getTourCultureItems(id, null);
     }
 
     @PostMapping(consumes = {"multipart/form-data"})
@@ -85,6 +121,8 @@ public class TourController {
             @RequestParam(required = false) java.math.BigDecimal price,
             @Parameter(description = "ID nghệ nhân", required = false)
             @RequestParam(required = false) Long artisanId,
+            @Parameter(description = "Danh sách ID culture items gắn với tour (địa điểm nổi bật, lễ hội, ẩm thực). Thứ tự = thứ tự hiển thị.")
+            @RequestParam(required = false) List<Long> cultureItemIds,
             @Parameter(description = "Thumbnail image của tour", schema = @Schema(type = "string", format = "binary"))
             @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail,
             @Parameter(description = "Danh sách ảnh của tour (có thể chọn nhiều ảnh)", 
@@ -140,6 +178,10 @@ public class TourController {
             
             saved = tourService.save(saved);
             
+            if (cultureItemIds != null && !cultureItemIds.isEmpty()) {
+                tourCultureItemService.setCultureItemsForTour(saved.getId(), cultureItemIds);
+            }
+            
             return ResponseEntity.ok(ApiResponse.success(saved, "Tạo tour thành công"));
         } catch (IOException e) {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR, "Lỗi khi upload ảnh: " + e.getMessage());
@@ -166,6 +208,8 @@ public class TourController {
             @RequestParam(required = false) java.math.BigDecimal price,
             @Parameter(description = "ID nghệ nhân", required = false)
             @RequestParam(required = false) Long artisanId,
+            @Parameter(description = "Danh sách ID culture items (thay thế toàn bộ). Truyền rỗng để xóa hết.")
+            @RequestParam(required = false) List<Long> cultureItemIds,
             @Parameter(description = "Thumbnail image mới (nếu có)", schema = @Schema(type = "string", format = "binary"))
             @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail,
             @Parameter(description = "Danh sách ảnh mới (nếu có, có thể chọn nhiều ảnh)", 
@@ -231,11 +275,37 @@ public class TourController {
                 }
             }
             
+            if (cultureItemIds != null) {
+                tourCultureItemService.setCultureItemsForTour(id, cultureItemIds);
+            }
+            
             Tour updated = tourService.save(existing);
             return ResponseEntity.ok(ApiResponse.success(updated, "Cập nhật tour thành công"));
         } catch (IOException e) {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR, "Lỗi khi upload ảnh: " + e.getMessage());
         }
+    }
+
+    @PostMapping("/{id}/culture-items")
+    @Operation(summary = "Gắn culture items vào tour", description = "Thay thế toàn bộ culture items của tour. Truyền rỗng để xóa hết. Cần role STAFF/ADMIN.")
+    public ResponseEntity<ApiResponse<Void>> setTourCultureItems(
+            @PathVariable Long id,
+            @RequestParam(required = false) List<Long> cultureItemIds) {
+        tourService.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Tour không tồn tại"));
+        tourCultureItemService.setCultureItemsForTour(id, cultureItemIds != null ? cultureItemIds : List.of());
+        return ResponseEntity.ok(ApiResponse.success(null, "Cập nhật culture items thành công"));
+    }
+
+    @DeleteMapping("/{id}/culture-items/{cultureItemId}")
+    @Operation(summary = "Bỏ culture item khỏi tour", description = "Cần role STAFF/ADMIN.")
+    public ResponseEntity<ApiResponse<Void>> removeTourCultureItem(
+            @PathVariable Long id,
+            @PathVariable Long cultureItemId) {
+        tourService.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Tour không tồn tại"));
+        tourCultureItemService.deleteByTourIdAndCultureItemId(id, cultureItemId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Đã bỏ culture item khỏi tour"));
     }
 
     @DeleteMapping("/{id}")

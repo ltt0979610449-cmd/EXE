@@ -64,6 +64,12 @@ public class ProvinceController {
             @RequestParam(required = false) java.math.BigDecimal longitude,
             @Parameter(description = "Mô tả", required = false)
             @RequestParam(required = false) String description,
+            @Parameter(description = "Thời điểm đẹp nhất (e.g. Tháng 10 - Tháng 3 mùa khô)", required = false)
+            @RequestParam(required = false) String bestSeason,
+            @Parameter(description = "Cách di chuyển đến vùng (e.g. Xe máy, xe khách từ Pleiku)", required = false)
+            @RequestParam(required = false) String transportation,
+            @Parameter(description = "Lưu ý ứng xử văn hoá - JSON array hoặc text", required = false)
+            @RequestParam(required = false) String culturalTips,
             @Parameter(description = "Trạng thái hoạt động", required = false)
             @RequestParam(required = false) Boolean isActive,
             @Parameter(description = "Thumbnail image của tỉnh thành", schema = @Schema(type = "string", format = "binary"))
@@ -86,6 +92,9 @@ public class ProvinceController {
                     .latitude(latitude)
                     .longitude(longitude)
                     .description(description)
+                    .bestSeason(bestSeason)
+                    .transportation(transportation)
+                    .culturalTips(culturalTips)
                     .isActive(isActive != null ? isActive : true)
                     .build();
             
@@ -126,6 +135,12 @@ public class ProvinceController {
             @RequestParam(required = false) java.math.BigDecimal longitude,
             @Parameter(description = "Mô tả", required = false)
             @RequestParam(required = false) String description,
+            @Parameter(description = "Thời điểm đẹp nhất", required = false)
+            @RequestParam(required = false) String bestSeason,
+            @Parameter(description = "Cách di chuyển đến vùng", required = false)
+            @RequestParam(required = false) String transportation,
+            @Parameter(description = "Lưu ý ứng xử văn hoá", required = false)
+            @RequestParam(required = false) String culturalTips,
             @Parameter(description = "Trạng thái hoạt động", required = false)
             @RequestParam(required = false) Boolean isActive,
             @Parameter(description = "Thumbnail image mới (nếu có)", schema = @Schema(type = "string", format = "binary"))
@@ -141,6 +156,9 @@ public class ProvinceController {
             if (latitude != null) existing.setLatitude(latitude);
             if (longitude != null) existing.setLongitude(longitude);
             if (description != null) existing.setDescription(description);
+            if (bestSeason != null) existing.setBestSeason(bestSeason);
+            if (transportation != null) existing.setTransportation(transportation);
+            if (culturalTips != null) existing.setCulturalTips(culturalTips);
             if (isActive != null) existing.setIsActive(isActive);
             
             // Handle thumbnail
