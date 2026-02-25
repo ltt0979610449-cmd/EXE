@@ -4,11 +4,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import swd.coiviet.dto.request.AddQuizQuestionRequest;
-import swd.coiviet.dto.response.ApiResponse;
+import swd.coiviet.dto.response.*;
 import swd.coiviet.enums.LearnDifficulty;
 import swd.coiviet.enums.LearnModuleStatus;
 import swd.coiviet.enums.PublicationStatus;
@@ -20,6 +21,7 @@ import swd.coiviet.service.*;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -55,7 +57,8 @@ public class LearnStaffController {
 
     @PostMapping(value = "/modules", consumes = {"multipart/form-data"})
     @Operation(summary = "Tạo module Learn")
-    public ResponseEntity<ApiResponse<LearnModule>> createModule(
+    @Transactional
+    public ResponseEntity<ApiResponse<LearnModuleResponse>> createModule(
             @RequestParam @NotNull Long categoryId,
             @RequestParam @NotBlank String title,
             @RequestParam(required = false) String slug,
@@ -99,7 +102,9 @@ public class LearnStaffController {
                 saved.setThumbnailUrl(url);
                 saved = moduleService.save(saved);
             }
-            return ResponseEntity.ok(ApiResponse.success(saved, "Tạo module thành công"));
+            LearnModule withRelations = moduleService.findByIdWithRelations(saved.getId())
+                    .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Module không tồn tại"));
+            return ResponseEntity.ok(ApiResponse.success(toModuleResponse(withRelations), "Tạo module thành công"));
         } catch (IOException e) {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR, "Lỗi upload ảnh: " + e.getMessage());
         }
@@ -107,7 +112,8 @@ public class LearnStaffController {
 
     @PutMapping(value = "/modules/{id}", consumes = {"multipart/form-data"})
     @Operation(summary = "Cập nhật module")
-    public ResponseEntity<ApiResponse<LearnModule>> updateModule(
+    @Transactional
+    public ResponseEntity<ApiResponse<LearnModuleResponse>> updateModule(
             @PathVariable Long id,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) String title,
@@ -149,7 +155,10 @@ public class LearnStaffController {
                 String url = cloudinaryService.uploadLearnModuleThumbnail(thumbnail, id);
                 existing.setThumbnailUrl(url);
             }
-            return ResponseEntity.ok(ApiResponse.success(moduleService.save(existing), "Cập nhật module thành công"));
+            moduleService.save(existing);
+            LearnModule withRelations = moduleService.findByIdWithRelations(id)
+                    .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Module không tồn tại"));
+            return ResponseEntity.ok(ApiResponse.success(toModuleResponse(withRelations), "Cập nhật module thành công"));
         } catch (IOException e) {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR, "Lỗi upload ảnh: " + e.getMessage());
         }
@@ -157,11 +166,15 @@ public class LearnStaffController {
 
     @PutMapping("/modules/{id}/publish")
     @Operation(summary = "Publish module")
-    public ResponseEntity<ApiResponse<LearnModule>> publishModule(@PathVariable Long id) {
+    @Transactional
+    public ResponseEntity<ApiResponse<LearnModuleResponse>> publishModule(@PathVariable Long id) {
         LearnModule m = moduleService.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Module không tồn tại"));
         m.setStatus(LearnModuleStatus.PUBLISHED);
-        return ResponseEntity.ok(ApiResponse.success(moduleService.save(m), "Publish module thành công"));
+        moduleService.save(m);
+        LearnModule withRelations = moduleService.findByIdWithRelations(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Module không tồn tại"));
+        return ResponseEntity.ok(ApiResponse.success(toModuleResponse(withRelations), "Publish module thành công"));
     }
 
     @DeleteMapping("/modules/{id}")
@@ -173,9 +186,9 @@ public class LearnStaffController {
         return ResponseEntity.ok(ApiResponse.success(null, "Xóa module thành công"));
     }
 
-    @PostMapping("/lessons")
+    @PostMapping(value = "/lessons", consumes = {"multipart/form-data"})
     @Operation(summary = "Tạo lesson")
-    public ResponseEntity<ApiResponse<LearnLesson>> createLesson(
+    public ResponseEntity<ApiResponse<LearnLessonResponse>> createLesson(
             @RequestParam @NotNull Long moduleId,
             @RequestParam @NotBlank String title,
             @RequestParam(required = false) String slug,
@@ -217,7 +230,7 @@ public class LearnStaffController {
                 saved.setImageUrl(url);
                 saved = lessonService.save(saved);
             }
-            return ResponseEntity.ok(ApiResponse.success(saved, "Tạo lesson thành công"));
+            return ResponseEntity.ok(ApiResponse.success(toLessonResponse(saved), "Tạo lesson thành công"));
         } catch (IOException e) {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR, "Lỗi upload ảnh: " + e.getMessage());
         }
@@ -225,7 +238,8 @@ public class LearnStaffController {
 
     @PutMapping(value = "/lessons/{id}", consumes = {"multipart/form-data"})
     @Operation(summary = "Cập nhật lesson")
-    public ResponseEntity<ApiResponse<LearnLesson>> updateLesson(
+    @Transactional
+    public ResponseEntity<ApiResponse<LearnLessonResponse>> updateLesson(
             @PathVariable Long id,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String slug,
@@ -259,7 +273,8 @@ public class LearnStaffController {
                 String url = cloudinaryService.uploadLearnLessonImage(image, id);
                 existing.setImageUrl(url);
             }
-            return ResponseEntity.ok(ApiResponse.success(lessonService.save(existing), "Cập nhật lesson thành công"));
+            LearnLesson saved = lessonService.save(existing);
+            return ResponseEntity.ok(ApiResponse.success(toLessonResponse(saved), "Cập nhật lesson thành công"));
         } catch (IOException e) {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR, "Lỗi upload ảnh: " + e.getMessage());
         }
@@ -267,11 +282,13 @@ public class LearnStaffController {
 
     @PutMapping("/lessons/{id}/publish")
     @Operation(summary = "Publish lesson")
-    public ResponseEntity<ApiResponse<LearnLesson>> publishLesson(@PathVariable Long id) {
+    @Transactional
+    public ResponseEntity<ApiResponse<LearnLessonResponse>> publishLesson(@PathVariable Long id) {
         LearnLesson l = lessonService.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Lesson không tồn tại"));
         l.setStatus(PublicationStatus.PUBLISHED);
-        return ResponseEntity.ok(ApiResponse.success(lessonService.save(l), "Publish lesson thành công"));
+        LearnLesson saved = lessonService.save(l);
+        return ResponseEntity.ok(ApiResponse.success(toLessonResponse(saved), "Publish lesson thành công"));
     }
 
     @DeleteMapping("/lessons/{id}")
@@ -285,7 +302,7 @@ public class LearnStaffController {
 
     @PostMapping("/quizzes")
     @Operation(summary = "Tạo quiz")
-    public ResponseEntity<ApiResponse<Quiz>> createQuiz(
+    public ResponseEntity<ApiResponse<QuizResponse>> createQuiz(
             @RequestParam @NotNull Long moduleId,
             @RequestParam @NotBlank String title,
             @RequestParam(required = false) Integer timeLimitMinutes,
@@ -310,12 +327,14 @@ public class LearnStaffController {
                     .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Voucher không tồn tại"));
             quiz.setAchievementVoucher(v);
         }
-        return ResponseEntity.ok(ApiResponse.success(quizService.save(quiz), "Tạo quiz thành công"));
+        Quiz saved = quizService.save(quiz);
+        return ResponseEntity.ok(ApiResponse.success(toQuizResponse(saved), "Tạo quiz thành công"));
     }
 
     @PutMapping("/quizzes/{id}")
     @Operation(summary = "Cập nhật quiz")
-    public ResponseEntity<ApiResponse<Quiz>> updateQuiz(
+    @Transactional
+    public ResponseEntity<ApiResponse<QuizResponse>> updateQuiz(
             @PathVariable Long id,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) Integer timeLimitMinutes,
@@ -335,36 +354,19 @@ public class LearnStaffController {
                     .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Voucher không tồn tại"));
             existing.setAchievementVoucher(v);
         }
-        return ResponseEntity.ok(ApiResponse.success(quizService.save(existing), "Cập nhật quiz thành công"));
+        quizService.save(existing);
+        Quiz updated = quizService.findByIdWithQuestions(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Quiz không tồn tại"));
+        return ResponseEntity.ok(ApiResponse.success(toQuizResponse(updated), "Cập nhật quiz thành công"));
     }
 
     @PostMapping("/quizzes/{quizId}/questions")
     @Operation(summary = "Thêm câu hỏi vào quiz")
-    public ResponseEntity<ApiResponse<QuizQuestion>> addQuizQuestion(
+    public ResponseEntity<ApiResponse<QuizQuestionResponse>> addQuizQuestion(
             @PathVariable Long quizId,
             @RequestBody AddQuizQuestionRequest req) {
-        Quiz quiz = quizService.findById(quizId)
-                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Quiz không tồn tại"));
-        QuizQuestion q = QuizQuestion.builder()
-                .quiz(quiz)
-                .questionText(req.getQuestionText())
-                .hintText(req.getHintText())
-                .explanationText(req.getExplanationText())
-                .orderIndex(req.getOrderIndex() != null ? req.getOrderIndex() : quiz.getQuestions().size())
-                .build();
-        if (req.getOptions() != null) {
-            for (AddQuizQuestionRequest.QuizOptionInput opt : req.getOptions()) {
-                q.getOptions().add(QuizOption.builder()
-                        .question(q)
-                        .label(opt.getLabel())
-                        .optionText(opt.getOptionText())
-                        .isCorrect(opt.getIsCorrect() != null ? opt.getIsCorrect() : false)
-                        .build());
-            }
-        }
-        quiz.getQuestions().add(q);
-        quizService.save(quiz);
-        return ResponseEntity.ok(ApiResponse.success(q, "Thêm câu hỏi thành công"));
+        QuizQuestion q = quizService.addQuestion(quizId, req);
+        return ResponseEntity.ok(ApiResponse.success(toQuizQuestionResponse(q), "Thêm câu hỏi thành công"));
     }
 
     @DeleteMapping("/quizzes/{id}")
@@ -374,5 +376,150 @@ public class LearnStaffController {
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Quiz không tồn tại"));
         quizService.deleteById(id);
         return ResponseEntity.ok(ApiResponse.success(null, "Xóa quiz thành công"));
+    }
+
+    private LearnModuleResponse toModuleResponse(LearnModule m) {
+        List<LearnLesson> lessons = lessonService.findByModuleIdAndStatus(m.getId(), PublicationStatus.PUBLISHED);
+        int durationMinutes = lessons.stream()
+                .mapToInt(l -> l.getEstimatedMinutes() != null ? l.getEstimatedMinutes() : 0)
+                .sum();
+        List<LearnLessonSummaryResponse> lessonSummaries = lessons.stream()
+                .map(l -> LearnLessonSummaryResponse.builder()
+                        .id(l.getId())
+                        .title(l.getTitle())
+                        .slug(l.getSlug())
+                        .thumbnailUrl(l.getImageUrl())
+                        .duration(l.getEstimatedMinutes())
+                        .videoUrl(l.getVideoUrl())
+                        .orderIndex(l.getOrderIndex())
+                        .build())
+                .toList();
+        QuizSummaryResponse quizPrompt = null;
+        if (m.getQuiz() != null) {
+            int totalQuestions = m.getQuiz().getQuestions() != null ? m.getQuiz().getQuestions().size() : 0;
+            quizPrompt = QuizSummaryResponse.builder()
+                    .id(m.getQuiz().getId())
+                    .title(m.getQuiz().getTitle())
+                    .totalQuestions(totalQuestions)
+                    .timeLimitMinutes(m.getQuiz().getTimeLimitMinutes())
+                    .build();
+        }
+        List<TourSummaryResponse> suggestedTours = new ArrayList<>();
+        if (m.getSuggestedTours() != null) {
+            for (Tour t : m.getSuggestedTours()) {
+                suggestedTours.add(TourSummaryResponse.builder()
+                        .id(t.getId())
+                        .title(t.getTitle())
+                        .slug(t.getSlug())
+                        .thumbnailUrl(t.getThumbnailUrl())
+                        .location(t.getProvince() != null ? t.getProvince().getName() : null)
+                        .description(t.getDescription())
+                        .price(t.getPrice())
+                        .build());
+            }
+        }
+        return LearnModuleResponse.builder()
+                .id(m.getId())
+                .title(m.getTitle())
+                .slug(m.getSlug())
+                .thumbnailUrl(m.getThumbnailUrl())
+                .categoryId(m.getCategory() != null ? m.getCategory().getId() : null)
+                .categoryName(m.getCategory() != null ? m.getCategory().getName() : null)
+                .quickNotesJson(m.getQuickNotesJson())
+                .culturalEtiquetteTitle(m.getCulturalEtiquetteTitle())
+                .culturalEtiquetteText(m.getCulturalEtiquetteText())
+                .lessonsCount(lessons.size())
+                .durationMinutes(durationMinutes)
+                .lessons(lessonSummaries)
+                .quizPrompt(quizPrompt)
+                .suggestedTours(suggestedTours)
+                .build();
+    }
+
+    private LearnLessonResponse toLessonResponse(LearnLesson l) {
+        return LearnLessonResponse.builder()
+                .id(l.getId())
+                .title(l.getTitle())
+                .slug(l.getSlug())
+                .imageUrl(l.getImageUrl())
+                .contentJson(l.getContentJson())
+                .vocabularyJson(l.getVocabularyJson())
+                .objectiveText(l.getObjectiveText())
+                .difficulty(l.getDifficulty())
+                .estimatedMinutes(l.getEstimatedMinutes())
+                .videoUrl(l.getVideoUrl())
+                .viewsCount(l.getViewsCount() != null ? l.getViewsCount() : 0)
+                .orderIndex(l.getOrderIndex())
+                .totalLessonsInModule((long) lessonService.findByModuleIdAndStatus(l.getModule().getId(), PublicationStatus.PUBLISHED).size())
+                .author(l.getArtisan() != null ? ArtisanSummaryResponse.builder()
+                        .id(l.getArtisan().getId())
+                        .fullName(l.getArtisan().getFullName())
+                        .profileImageUrl(l.getArtisan().getProfileImageUrl())
+                        .build() : null)
+                .moduleId(l.getModule().getId())
+                .moduleTitle(l.getModule().getTitle())
+                .categoryName(l.getModule().getCategory() != null ? l.getModule().getCategory().getName() : null)
+                .build();
+    }
+
+    private QuizQuestionResponse toQuizQuestionResponse(QuizQuestion qq) {
+        List<QuizOptionResponse> optionResponses = qq.getOptions() != null
+                ? qq.getOptions().stream()
+                        .map(o -> QuizOptionResponse.builder()
+                                .id(o.getId())
+                                .label(o.getLabel())
+                                .optionText(o.getOptionText())
+                                .isCorrect(o.getIsCorrect())
+                                .build())
+                        .toList()
+                : new ArrayList<>();
+        return QuizQuestionResponse.builder()
+                .id(qq.getId())
+                .questionText(qq.getQuestionText())
+                .hintText(qq.getHintText())
+                .orderIndex(qq.getOrderIndex())
+                .options(optionResponses)
+                .build();
+    }
+
+    private QuizResponse toQuizResponse(Quiz q) {
+        List<String> rules = new ArrayList<>();
+        if (q.getRulesJson() != null && !q.getRulesJson().isEmpty()) {
+            try {
+                rules = Arrays.asList(q.getRulesJson().split("\\|"));
+            } catch (Exception ignored) {
+            }
+        }
+        List<QuizQuestionResponse> questionResponses = new ArrayList<>();
+        if (q.getQuestions() != null) {
+            for (QuizQuestion qq : q.getQuestions()) {
+                List<QuizOptionResponse> optionResponses = qq.getOptions().stream()
+                        .map(o -> QuizOptionResponse.builder()
+                                .id(o.getId())
+                                .label(o.getLabel())
+                                .optionText(o.getOptionText())
+                                .isCorrect(o.getIsCorrect())
+                                .build())
+                        .toList();
+                questionResponses.add(QuizQuestionResponse.builder()
+                        .id(qq.getId())
+                        .questionText(qq.getQuestionText())
+                        .hintText(qq.getHintText())
+                        .orderIndex(qq.getOrderIndex())
+                        .options(optionResponses)
+                        .build());
+            }
+        }
+        return QuizResponse.builder()
+                .id(q.getId())
+                .moduleId(q.getModule() != null ? q.getModule().getId() : null)
+                .title(q.getTitle())
+                .timeLimitMinutes(q.getTimeLimitMinutes())
+                .difficulty(q.getDifficulty())
+                .objective(q.getObjective())
+                .rules(rules)
+                .totalQuestions(q.getQuestions() != null ? q.getQuestions().size() : 0)
+                .questions(questionResponses)
+                .build();
     }
 }

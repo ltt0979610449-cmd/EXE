@@ -28,6 +28,11 @@ public class LearnModuleServiceImpl implements LearnModuleService {
     }
 
     @Override
+    public Optional<LearnModule> findByIdWithRelations(Long id) {
+        return repo.findWithQuizAndToursById(id);
+    }
+
+    @Override
     public Optional<LearnModule> findBySlug(String slug) {
         return repo.findBySlug(slug);
     }

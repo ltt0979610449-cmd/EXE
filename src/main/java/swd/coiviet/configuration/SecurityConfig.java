@@ -103,7 +103,7 @@ public class SecurityConfig {
                         .title("CoiViet")
                         .version("1.0")
                         .description("API documentation for the CoiViet System"))
-                .addServersItem(new Server().url("https://exe-1-k8ma.onrender.com/"));
+                .addServersItem(new Server().url("http://localhost:8080/"));
     }
 
     @Bean

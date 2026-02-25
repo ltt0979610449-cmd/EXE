@@ -2,6 +2,7 @@ package swd.coiviet.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import swd.coiviet.dto.response.*;
 import swd.coiviet.enums.LearnModuleStatus;
@@ -62,7 +63,7 @@ public class LearnController {
     @GetMapping("/public/modules/{id}")
     @Operation(summary = "Chi tiết module")
     public ResponseEntity<swd.coiviet.dto.response.ApiResponse<LearnModuleResponse>> getModuleById(@PathVariable Long id) {
-        LearnModule module = moduleService.findById(id)
+        LearnModule module = moduleService.findByIdWithRelations(id)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Module không tồn tại"));
         if (module.getStatus() != LearnModuleStatus.PUBLISHED) {
             throw new AppException(ErrorCode.NOT_FOUND, "Module không tồn tại");
@@ -84,8 +85,9 @@ public class LearnController {
 
     @GetMapping("/public/quizzes/{id}")
     @Operation(summary = "Lấy đề quiz (không gửi đáp án đúng)")
+    @Transactional(readOnly = true)
     public ResponseEntity<swd.coiviet.dto.response.ApiResponse<QuizResponse>> getQuizById(@PathVariable Long id) {
-        Quiz quiz = quizService.findById(id)
+        Quiz quiz = quizService.findByIdWithQuestions(id)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Quiz không tồn tại"));
         if (quiz.getStatus() != PublicationStatus.PUBLISHED) {
             throw new AppException(ErrorCode.NOT_FOUND, "Quiz không tồn tại");
