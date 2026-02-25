@@ -119,7 +119,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     private boolean isStaffRole(Role role) {
-        return role == Role.ARTISAN || role == Role.ADMIN;
+        return role == Role.ARTISAN || role == Role.STAFF || role == Role.ADMIN;
     }
 
     private boolean isParticipant(ChatConversation conversation, User user) {

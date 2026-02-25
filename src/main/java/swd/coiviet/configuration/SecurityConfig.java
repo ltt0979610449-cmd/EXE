@@ -46,7 +46,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
 
                         // Upload endpoints: require authentication
-                        .requestMatchers("/api/upload/**").hasAnyRole("CUSTOMER", "ARTISAN", "ADMIN")
+                        .requestMatchers("/api/upload/**").hasAnyRole("CUSTOMER", "ARTISAN", "STAFF", "ADMIN")
 
                 // Public tour/province endpoints (for browsing)
                 .requestMatchers("/api/tours/public/**", "/api/provinces/public/**", 
@@ -70,7 +70,7 @@ public class SecurityConfig {
                 // User endpoints + Learn (CUSTOMER, ARTISAN, ADMIN - Role enum thực tế)
                 .requestMatchers("/api/user/**", "/api/bookings/**", "/api/reviews/**", 
                         "/api/user-memories/**", "/api/notifications/**", "/api/payments/**",
-                        "/api/learn/**").hasAnyRole("CUSTOMER", "ARTISAN", "ADMIN")
+                        "/api/learn/**").hasAnyRole("CUSTOMER", "ARTISAN", "STAFF", "ADMIN")
 
                         // Chat endpoints: authenticated users
                         .requestMatchers("/api/chats/**").authenticated()

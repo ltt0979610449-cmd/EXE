@@ -360,6 +360,19 @@ public class LearnStaffController {
         return ResponseEntity.ok(ApiResponse.success(toQuizResponse(updated), "Cập nhật quiz thành công"));
     }
 
+    @PutMapping("/quizzes/{id}/publish")
+    @Operation(summary = "Publish quiz")
+    @Transactional
+    public ResponseEntity<ApiResponse<QuizResponse>> publishQuiz(@PathVariable Long id) {
+        Quiz q = quizService.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Quiz không tồn tại"));
+        q.setStatus(PublicationStatus.PUBLISHED);
+        quizService.save(q);
+        Quiz updated = quizService.findByIdWithQuestions(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Quiz không tồn tại"));
+        return ResponseEntity.ok(ApiResponse.success(toQuizResponse(updated), "Publish quiz thành công"));
+    }
+
     @PostMapping("/quizzes/{quizId}/questions")
     @Operation(summary = "Thêm câu hỏi vào quiz")
     public ResponseEntity<ApiResponse<QuizQuestionResponse>> addQuizQuestion(

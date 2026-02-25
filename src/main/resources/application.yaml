@@ -106,6 +106,8 @@ app:
 initial:
   admin:
     password: ${INITIAL_ADMIN_PASSWORD}
+  staff:
+    password: ${INITIAL_STAFF_PASSWORD:${initial.admin.password}}
 
 springdoc:
   api-docs:

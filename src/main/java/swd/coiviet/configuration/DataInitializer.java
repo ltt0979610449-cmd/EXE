@@ -2,6 +2,7 @@ package swd.coiviet.configuration;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,21 +23,36 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final LearnCategoryRepository learnCategoryRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JdbcTemplate jdbcTemplate;
     private final String initialAdminPassword;
+    private final String initialStaffPassword;
 
     public DataInitializer(UserRepository userRepository,
                            LearnCategoryRepository learnCategoryRepository,
                            PasswordEncoder passwordEncoder,
-                           @Value("${initial.admin.password}") String initialAdminPassword) {
+                           JdbcTemplate jdbcTemplate,
+                           @Value("${initial.admin.password}") String initialAdminPassword,
+                           @Value("${initial.staff.password}") String initialStaffPassword) {
         this.userRepository = userRepository;
         this.learnCategoryRepository = learnCategoryRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jdbcTemplate = jdbcTemplate;
         this.initialAdminPassword = initialAdminPassword;
+        this.initialStaffPassword = initialStaffPassword;
     }
 
     @Override
     @Transactional
     public void run(String... args) throws Exception {
+        // Migration: Cập nhật users_role_check để cho phép role STAFF (PostgreSQL constraint)
+        try {
+            jdbcTemplate.execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check");
+            jdbcTemplate.execute("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('CUSTOMER', 'ARTISAN', 'STAFF', 'ADMIN'))");
+            System.out.println("Updated users_role_check constraint to include STAFF.");
+        } catch (Exception e) {
+            System.err.println("Failed to update users_role_check (may already be correct): " + e.getMessage());
+        }
+
         // Không cần tạo entity Role, chỉ cần kiểm tra và tạo user admin với role là enum
         if (!userRepository.findByUsername("admin").isPresent()) {
             User adminUser = new User();
@@ -54,6 +70,24 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("Admin account created with username: admin and password: " + initialAdminPassword);
         } else {
             System.out.println("Admin account already exists.");
+        }
+
+        if (!userRepository.findByUsername("staff").isPresent()) {
+            User staffUser = new User();
+            staffUser.setUsername("staff");
+            staffUser.setEmail("staff@example.com");
+            staffUser.setPasswordHash(passwordEncoder.encode(initialStaffPassword));
+            staffUser.setFullName("Staff User");
+            staffUser.setPhone("0123456788");
+            staffUser.setAvatarUrl(null);
+            staffUser.setDateOfBirth(LocalDate.of(1990, 1, 1));
+            staffUser.setGender(Gender.MALE);
+            staffUser.setRole(Role.STAFF);
+            staffUser.setStatus(Status.ACTIVE);
+            userRepository.save(staffUser);
+            System.out.println("Staff account created with username: staff and password: " + initialStaffPassword);
+        } else {
+            System.out.println("Staff account already exists.");
         }
 
         // Fix users có role null (tạo trước khi có fix) - gán CUSTOMER

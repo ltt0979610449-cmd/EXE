@@ -2,6 +2,7 @@ package swd.coiviet.controller.voucher;
 
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import swd.coiviet.dto.request.CreateVoucherRequest;
@@ -55,9 +56,9 @@ public class VoucherController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(summary = "Lấy danh sách vouchers", description = "Lấy tất cả vouchers (chỉ ADMIN/STAFF)")
     public ResponseEntity<ApiResponse<List<VoucherResponse>>> getAllVouchers() {
-        // TODO: Add admin/staff check
         List<Voucher> vouchers = voucherService.findAll();
         List<VoucherResponse> responses = vouchers.stream()
                 .map(this::mapToResponse)
@@ -66,6 +67,7 @@ public class VoucherController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(summary = "Lấy voucher theo ID", description = "Lấy thông tin chi tiết voucher")
     public ResponseEntity<ApiResponse<VoucherResponse>> getVoucherById(@PathVariable Long id) {
         Voucher voucher = voucherService.findById(id)
@@ -74,6 +76,7 @@ public class VoucherController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(summary = "Tạo voucher mới", description = "Tạo voucher mới (chỉ ADMIN/STAFF)")
     public ResponseEntity<ApiResponse<VoucherResponse>> createVoucher(
             @Validated @RequestBody CreateVoucherRequest request) {
@@ -100,6 +103,7 @@ public class VoucherController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(summary = "Cập nhật voucher", description = "Cập nhật thông tin voucher (chỉ ADMIN/STAFF)")
     public ResponseEntity<ApiResponse<VoucherResponse>> updateVoucher(
             @PathVariable Long id,
@@ -130,6 +134,7 @@ public class VoucherController {
     }
 
     @PostMapping("/{id}/send-to-user/{userId}")
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(summary = "Gửi voucher cho user", description = "Gửi voucher cho user và tạo notification")
     public ResponseEntity<ApiResponse<VoucherResponse>> sendVoucherToUser(
             @PathVariable Long id,
@@ -147,6 +152,7 @@ public class VoucherController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(summary = "Xóa voucher", description = "Xóa voucher (chỉ ADMIN/STAFF)")
     public ResponseEntity<ApiResponse<Void>> deleteVoucher(@PathVariable Long id) {
         voucherService.findById(id)
