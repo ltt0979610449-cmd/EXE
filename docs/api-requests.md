@@ -105,18 +105,37 @@ Quy ước:
 ---
 
 ### Artisan (multipart)
+**GET** `/api/artisans/public/{id}/detail` (public)  
+Trả về `ArtisanDetailResponse` cho trang chi tiết nghệ nhân:
+- `id`, `fullName`, `specialization`, `bio`, `profileImageUrl`, `heroSubtitle`
+- `ethnicity`, `age`, `location` (quick info)
+- `images` (List<String>), `panoramaImageUrl`, `narrativeContent` (List<NarrativeBlock>)
+- `relatedTours`, `relatedCultureItems`, `otherArtisans`
+
 **POST** `/api/artisans`  
-`CreateArtisanRequest`:
+`CreateArtisanRequest` (multipart):
 - `userId` (required)
 - `fullName` (required)
 - `specialization` (required)
 - `bio`, `provinceId`, `workshopAddress` (optional)
+- `ethnicity` (optional, vd: Mường, Jrai)
+- `dateOfBirth` (optional, `yyyy-MM-dd`)
+- `heroSubtitle` (optional)
+- `narrativeContent` (optional, JSON: `[{"title":"...","content":"...","imageUrl":"..."}]`)
 - `profileImage` (file, optional)
+- `panoramaImage` (file, optional)
+- `images` (files[], optional)
 
-**PUT** `/api/artisans/{id}`  
-`UpdateArtisanRequest`: gửi **chỉ** field cần thay đổi  
+**PUT** `/api/artisans/me` (role ARTISAN)  
+Nghệ nhân cập nhật hồ sơ của chính mình (ID lấy từ token, không cần truyền). Tham số giống `PUT /api/artisans/{id}`.
+
+**PUT** `/api/artisans/{id}` (role STAFF, ADMIN)  
+`UpdateArtisanRequest` (multipart): gửi **chỉ** field cần thay đổi  
 - `fullName`, `specialization`, `bio`, `provinceId`, `workshopAddress` (optional)
+- `ethnicity`, `dateOfBirth`, `heroSubtitle`, `narrativeContent` (optional)
 - `profileImage` (file, optional)
+- `panoramaImage` (file, optional)
+- `images` (files[], optional)
 
 ---
 

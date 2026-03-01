@@ -177,6 +177,21 @@ public class LearnStaffController {
         return ResponseEntity.ok(ApiResponse.success(toModuleResponse(withRelations), "Publish module thành công"));
     }
 
+    @PutMapping("/modules/{id}/status")
+    @Operation(summary = "Điều chỉnh trạng thái module", description = "Đặt trạng thái: DRAFT, PUBLISHED")
+    @Transactional
+    public ResponseEntity<ApiResponse<LearnModuleResponse>> updateModuleStatus(
+            @PathVariable Long id,
+            @RequestParam LearnModuleStatus status) {
+        LearnModule m = moduleService.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Module không tồn tại"));
+        m.setStatus(status);
+        moduleService.save(m);
+        LearnModule withRelations = moduleService.findByIdWithRelations(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Module không tồn tại"));
+        return ResponseEntity.ok(ApiResponse.success(toModuleResponse(withRelations), "Cập nhật trạng thái thành công"));
+    }
+
     @DeleteMapping("/modules/{id}")
     @Operation(summary = "Xóa module")
     public ResponseEntity<ApiResponse<Void>> deleteModule(@PathVariable Long id) {
@@ -291,6 +306,19 @@ public class LearnStaffController {
         return ResponseEntity.ok(ApiResponse.success(toLessonResponse(saved), "Publish lesson thành công"));
     }
 
+    @PutMapping("/lessons/{id}/status")
+    @Operation(summary = "Điều chỉnh trạng thái lesson", description = "Đặt trạng thái: DRAFT, PUBLISHED, ARCHIVED")
+    @Transactional
+    public ResponseEntity<ApiResponse<LearnLessonResponse>> updateLessonStatus(
+            @PathVariable Long id,
+            @RequestParam PublicationStatus status) {
+        LearnLesson l = lessonService.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Lesson không tồn tại"));
+        l.setStatus(status);
+        LearnLesson saved = lessonService.save(l);
+        return ResponseEntity.ok(ApiResponse.success(toLessonResponse(saved), "Cập nhật trạng thái thành công"));
+    }
+
     @DeleteMapping("/lessons/{id}")
     @Operation(summary = "Xóa lesson")
     public ResponseEntity<ApiResponse<Void>> deleteLesson(@PathVariable Long id) {
@@ -371,6 +399,21 @@ public class LearnStaffController {
         Quiz updated = quizService.findByIdWithQuestions(id)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Quiz không tồn tại"));
         return ResponseEntity.ok(ApiResponse.success(toQuizResponse(updated), "Publish quiz thành công"));
+    }
+
+    @PutMapping("/quizzes/{id}/status")
+    @Operation(summary = "Điều chỉnh trạng thái quiz", description = "Đặt trạng thái: DRAFT, PUBLISHED, ARCHIVED")
+    @Transactional
+    public ResponseEntity<ApiResponse<QuizResponse>> updateQuizStatus(
+            @PathVariable Long id,
+            @RequestParam PublicationStatus status) {
+        Quiz q = quizService.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Quiz không tồn tại"));
+        q.setStatus(status);
+        quizService.save(q);
+        Quiz updated = quizService.findByIdWithQuestions(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Quiz không tồn tại"));
+        return ResponseEntity.ok(ApiResponse.success(toQuizResponse(updated), "Cập nhật trạng thái thành công"));
     }
 
     @PostMapping("/quizzes/{quizId}/questions")

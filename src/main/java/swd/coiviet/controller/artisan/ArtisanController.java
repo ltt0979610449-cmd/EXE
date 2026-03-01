@@ -10,8 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import swd.coiviet.dto.response.ApiResponse;
+import swd.coiviet.dto.response.ArtisanDetailResponse;
 import swd.coiviet.exception.AppException;
 import swd.coiviet.exception.ErrorCode;
+import swd.coiviet.enums.Role;
 import swd.coiviet.model.Artisan;
 import swd.coiviet.model.Province;
 import swd.coiviet.model.User;
@@ -21,7 +23,10 @@ import swd.coiviet.service.ProvinceService;
 import swd.coiviet.service.UserService;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -47,6 +52,13 @@ public class ArtisanController {
                 .filter(a -> a.getIsActive() != null && a.getIsActive())
                 .collect(java.util.stream.Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(artisans));
+    }
+
+    @GetMapping("/public/{id}/detail")
+    @Operation(summary = "Lấy chi tiết nghệ nhân", description = "Trả về thông tin đầy đủ cho trang artisan: quick info, gallery, narrative, tours/culture liên quan")
+    public ResponseEntity<ApiResponse<ArtisanDetailResponse>> getArtisanDetail(@PathVariable Long id) {
+        ArtisanDetailResponse detail = artisanService.getDetailById(id);
+        return ResponseEntity.ok(ApiResponse.success(detail));
     }
 
     @GetMapping("/public/{id}")
@@ -77,8 +89,18 @@ public class ArtisanController {
             @RequestParam(required = false) Long provinceId,
             @Parameter(description = "Địa chỉ xưởng", required = false)
             @RequestParam(required = false) String workshopAddress,
+            @Parameter(description = "Dân tộc (vd: Mường, Jrai)", required = false)
+            @RequestParam(required = false) String ethnicity,
+            @Parameter(description = "Ngày sinh (yyyy-MM-dd)", required = false)
+            @RequestParam(required = false) String dateOfBirth,
+            @Parameter(description = "Mô tả ngắn cho hero", required = false)
+            @RequestParam(required = false) String heroSubtitle,
+            @Parameter(description = "Narrative JSON: [{\"title\":\"...\",\"content\":\"...\",\"imageUrl\":\"...\"}]", required = false)
+            @RequestParam(required = false) String narrativeContent,
             @Parameter(description = "Ảnh profile của nghệ nhân", schema = @Schema(type = "string", format = "binary"))
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
+            @Parameter(description = "Ảnh panorama full-width", schema = @Schema(type = "string", format = "binary"))
+            @RequestPart(value = "panoramaImage", required = false) MultipartFile panoramaImage,
             @Parameter(description = "Danh sách ảnh khác (có thể chọn nhiều ảnh)", 
                     array = @ArraySchema(schema = @Schema(type = "string", format = "binary")))
             @RequestPart(value = "images", required = false) MultipartFile[] images) {
@@ -92,9 +114,18 @@ public class ArtisanController {
                     .specialization(specialization)
                     .bio(bio)
                     .workshopAddress(workshopAddress)
+                    .ethnicity(ethnicity)
+                    .heroSubtitle(heroSubtitle)
+                    .narrativeContent(narrativeContent)
                     .createdAt(LocalDateTime.now())
                     .isActive(true)
                     .build();
+            
+            if (dateOfBirth != null && !dateOfBirth.isBlank()) {
+                try {
+                    artisan.setDateOfBirth(LocalDate.parse(dateOfBirth, DateTimeFormatter.ISO_LOCAL_DATE));
+                } catch (Exception ignored) { }
+            }
             
             if (provinceId != null) {
                 Province province = provinceService.findById(provinceId)
@@ -103,12 +134,37 @@ public class ArtisanController {
             }
             
             Artisan saved = artisanService.save(artisan);
+
+            // Đổi role của user thành ARTISAN khi tạo artisan thành công
+            user.setRole(Role.ARTISAN);
+            userService.save(user);
             
             // Upload profile image if provided
             if (profileImage != null && !profileImage.isEmpty() && profileImage.getSize() > 0) {
                 String profileImageUrl = cloudinaryService.uploadArtisanProfileImage(profileImage, saved.getId());
                 saved.setProfileImageUrl(profileImageUrl);
                 saved = artisanService.save(saved);
+            }
+            
+            // Upload panorama image if provided
+            if (panoramaImage != null && !panoramaImage.isEmpty() && panoramaImage.getSize() > 0) {
+                String panoramaUrl = cloudinaryService.uploadArtisanPanoramaImage(panoramaImage, saved.getId());
+                saved.setPanoramaImageUrl(panoramaUrl);
+                saved = artisanService.save(saved);
+            }
+            
+            // Upload gallery images if provided
+            if (images != null && images.length > 0) {
+                List<MultipartFile> validImages = Arrays.stream(images)
+                        .filter(img -> img != null && !img.isEmpty() && img.getSize() > 0)
+                        .collect(java.util.stream.Collectors.toList());
+                if (!validImages.isEmpty()) {
+                    MultipartFile[] validImagesArray = validImages.toArray(new MultipartFile[0]);
+                    List<String> imageUrls = cloudinaryService.uploadArtisanImages(validImagesArray, saved.getId());
+                    String imagesJson = String.join(",", imageUrls);
+                    saved.setImages(imagesJson);
+                    saved = artisanService.save(saved);
+                }
             }
             
             return ResponseEntity.ok(ApiResponse.success(saved, "Tạo nghệ nhân thành công"));
@@ -131,8 +187,18 @@ public class ArtisanController {
             @RequestParam(required = false) Long provinceId,
             @Parameter(description = "Địa chỉ xưởng", required = false)
             @RequestParam(required = false) String workshopAddress,
+            @Parameter(description = "Dân tộc (vd: Mường, Jrai)", required = false)
+            @RequestParam(required = false) String ethnicity,
+            @Parameter(description = "Ngày sinh (yyyy-MM-dd)", required = false)
+            @RequestParam(required = false) String dateOfBirth,
+            @Parameter(description = "Mô tả ngắn cho hero", required = false)
+            @RequestParam(required = false) String heroSubtitle,
+            @Parameter(description = "Narrative JSON: [{\"title\":\"...\",\"content\":\"...\",\"imageUrl\":\"...\"}]", required = false)
+            @RequestParam(required = false) String narrativeContent,
             @Parameter(description = "Ảnh profile mới (nếu có)", schema = @Schema(type = "string", format = "binary"))
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
+            @Parameter(description = "Ảnh panorama full-width (nếu có)", schema = @Schema(type = "string", format = "binary"))
+            @RequestPart(value = "panoramaImage", required = false) MultipartFile panoramaImage,
             @Parameter(description = "Danh sách ảnh mới (nếu có, có thể chọn nhiều ảnh)", 
                     array = @ArraySchema(schema = @Schema(type = "string", format = "binary")))
             @RequestPart(value = "images", required = false) MultipartFile[] images) {
@@ -145,6 +211,14 @@ public class ArtisanController {
             if (specialization != null) existing.setSpecialization(specialization);
             if (bio != null) existing.setBio(bio);
             if (workshopAddress != null) existing.setWorkshopAddress(workshopAddress);
+            if (ethnicity != null) existing.setEthnicity(ethnicity);
+            if (heroSubtitle != null) existing.setHeroSubtitle(heroSubtitle);
+            if (narrativeContent != null) existing.setNarrativeContent(narrativeContent);
+            if (dateOfBirth != null && !dateOfBirth.isBlank()) {
+                try {
+                    existing.setDateOfBirth(LocalDate.parse(dateOfBirth, DateTimeFormatter.ISO_LOCAL_DATE));
+                } catch (Exception ignored) { }
+            }
             if (provinceId != null) {
                 Province province = provinceService.findById(provinceId)
                         .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Tỉnh thành không tồn tại"));
@@ -161,6 +235,40 @@ public class ArtisanController {
                 }
                 String profileImageUrl = cloudinaryService.uploadArtisanProfileImage(profileImage, id);
                 existing.setProfileImageUrl(profileImageUrl);
+            }
+            
+            // Handle panorama image
+            if (panoramaImage != null && !panoramaImage.isEmpty() && panoramaImage.getSize() > 0) {
+                if (existing.getPanoramaImageUrl() != null) {
+                    String publicId = cloudinaryService.extractPublicIdFromUrl(existing.getPanoramaImageUrl());
+                    if (publicId != null) {
+                        cloudinaryService.deleteResource(publicId);
+                    }
+                }
+                String panoramaUrl = cloudinaryService.uploadArtisanPanoramaImage(panoramaImage, id);
+                existing.setPanoramaImageUrl(panoramaUrl);
+            }
+            
+            // Handle gallery images
+            if (images != null && images.length > 0) {
+                List<MultipartFile> validImages = Arrays.stream(images)
+                        .filter(img -> img != null && !img.isEmpty() && img.getSize() > 0)
+                        .collect(java.util.stream.Collectors.toList());
+                if (!validImages.isEmpty()) {
+                    if (existing.getImages() != null && !existing.getImages().isEmpty()) {
+                        String[] oldImageUrls = existing.getImages().split(",");
+                        for (String oldUrl : oldImageUrls) {
+                            String publicId = cloudinaryService.extractPublicIdFromUrl(oldUrl.trim());
+                            if (publicId != null) {
+                                cloudinaryService.deleteResource(publicId);
+                            }
+                        }
+                    }
+                    MultipartFile[] validImagesArray = validImages.toArray(new MultipartFile[0]);
+                    List<String> imageUrls = cloudinaryService.uploadArtisanImages(validImagesArray, id);
+                    String imagesJson = String.join(",", imageUrls);
+                    existing.setImages(imagesJson);
+                }
             }
             
             Artisan updated = artisanService.save(existing);

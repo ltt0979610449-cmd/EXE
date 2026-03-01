@@ -13,7 +13,7 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
     Optional<Quiz> findByModuleId(Long moduleId);
     Optional<Quiz> findByModuleIdAndStatus(Long moduleId, PublicationStatus status);
 
-    @EntityGraph(attributePaths = {"questions"})
+    @EntityGraph(attributePaths = {"questions", "questions.options"})
     @Query("SELECT q FROM Quiz q WHERE q.id = :id")
     Optional<Quiz> findWithQuestionsById(@Param("id") Long id);
 }

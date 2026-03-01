@@ -16,7 +16,7 @@ public interface LearnModuleRepository extends JpaRepository<LearnModule, Long> 
     List<LearnModule> findByCategoryIdAndStatusOrderByOrderIndexAsc(Long categoryId, LearnModuleStatus status);
     Optional<LearnModule> findBySlug(String slug);
 
-    @EntityGraph(attributePaths = {"quiz", "suggestedTours"})
+    @EntityGraph(attributePaths = {"quiz", "quiz.questions", "suggestedTours", "suggestedTours.province"})
     @Query("SELECT m FROM LearnModule m WHERE m.id = :id")
     Optional<LearnModule> findWithQuizAndToursById(@Param("id") Long id);
 }

@@ -165,6 +165,11 @@ public class CloudinaryService {
         return uploadImage(file, folder, "artisan");
     }
 
+    public String uploadArtisanPanoramaImage(MultipartFile file, Long artisanId) throws IOException {
+        String folder = String.format("artisans/%d/panorama", artisanId == null ? 0 : artisanId);
+        return uploadImage(file, folder, "artisan");
+    }
+
     public String uploadAudio(MultipartFile file, String folder) throws IOException {
         validateAudioFile(file);
         try {

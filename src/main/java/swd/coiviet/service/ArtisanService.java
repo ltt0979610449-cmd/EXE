@@ -1,5 +1,6 @@
 package swd.coiviet.service;
 
+import swd.coiviet.dto.response.ArtisanDetailResponse;
 import swd.coiviet.model.Artisan;
 
 import java.util.List;
@@ -12,4 +13,5 @@ public interface ArtisanService {
     List<Artisan> findByProvinceId(Long provinceId);
     Optional<Artisan> findByUserId(Long userId);
     void deleteById(Long id);
+    ArtisanDetailResponse getDetailById(Long id);
 }

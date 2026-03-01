@@ -177,6 +177,21 @@ public class BlogPostController {
         return ResponseEntity.ok(ApiResponse.success(updated, "Publish blog post thành công"));
     }
 
+    @PutMapping("/{id}/status")
+    @Operation(summary = "Điều chỉnh trạng thái blog post", description = "Đặt trạng thái: DRAFT, PUBLISHED, ARCHIVED. Cần role STAFF/ADMIN.")
+    public ResponseEntity<ApiResponse<BlogPost>> updateBlogPostStatus(
+            @PathVariable Long id,
+            @RequestParam PublicationStatus status) {
+        BlogPost post = blogPostService.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Blog post không tồn tại"));
+        post.setStatus(status);
+        if (status == PublicationStatus.PUBLISHED && post.getPublishedAt() == null) {
+            post.setPublishedAt(LocalDateTime.now());
+        }
+        BlogPost updated = blogPostService.save(post);
+        return ResponseEntity.ok(ApiResponse.success(updated, "Cập nhật trạng thái thành công"));
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Xóa blog post", description = "Xóa blog post")
     public ResponseEntity<ApiResponse<Void>> deleteBlogPost(@PathVariable Long id) {

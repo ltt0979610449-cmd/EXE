@@ -2,6 +2,7 @@ package swd.coiviet.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -37,6 +38,28 @@ public class Artisan {
 
     @Column(columnDefinition = "text")
     private String profileImageUrl;
+
+    /** Dân tộc (vd: Mường, Jrai) */
+    private String ethnicity;
+
+    /** Ngày sinh - dùng để tính tuổi */
+    private LocalDate dateOfBirth;
+
+    /** URL ảnh gallery, phân cách bằng dấu phẩy */
+    @Column(columnDefinition = "text")
+    private String images;
+
+    /** Mô tả ngắn cho hero section */
+    @Column(columnDefinition = "text")
+    private String heroSubtitle;
+
+    /** JSON array các block: [{"title":"...","content":"...","imageUrl":"..."}] */
+    @Column(columnDefinition = "text")
+    private String narrativeContent;
+
+    /** Ảnh panorama full-width */
+    @Column(columnDefinition = "text")
+    private String panoramaImageUrl;
 
     private Integer totalTours;
 

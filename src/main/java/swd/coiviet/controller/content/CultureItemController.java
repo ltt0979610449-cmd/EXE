@@ -104,6 +104,7 @@ public class CultureItemController {
                     .title(title)
                     .description(description)
                     .videoUrl(videoUrl)
+                    .status(PublicationStatus.DRAFT)
                     .createdAt(LocalDateTime.now())
                     .build();
             
@@ -213,6 +214,28 @@ public class CultureItemController {
         } catch (IOException e) {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR, "Lỗi khi upload ảnh: " + e.getMessage());
         }
+    }
+
+    @PutMapping("/{id}/publish")
+    @Operation(summary = "Publish văn hóa", description = "Chuyển văn hóa sang trạng thái published. Cần role STAFF/ADMIN.")
+    public ResponseEntity<ApiResponse<CultureItem>> publishCultureItem(@PathVariable Long id) {
+        CultureItem item = cultureItemService.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Văn hóa không tồn tại"));
+        item.setStatus(PublicationStatus.PUBLISHED);
+        CultureItem updated = cultureItemService.save(item);
+        return ResponseEntity.ok(ApiResponse.success(updated, "Publish văn hóa thành công"));
+    }
+
+    @PutMapping("/{id}/status")
+    @Operation(summary = "Điều chỉnh trạng thái văn hóa", description = "Đặt trạng thái: DRAFT, PUBLISHED, ARCHIVED. Cần role STAFF/ADMIN.")
+    public ResponseEntity<ApiResponse<CultureItem>> updateCultureItemStatus(
+            @PathVariable Long id,
+            @RequestParam PublicationStatus status) {
+        CultureItem item = cultureItemService.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Văn hóa không tồn tại"));
+        item.setStatus(status);
+        CultureItem updated = cultureItemService.save(item);
+        return ResponseEntity.ok(ApiResponse.success(updated, "Cập nhật trạng thái thành công"));
     }
 
     @DeleteMapping("/{id}")

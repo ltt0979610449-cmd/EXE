@@ -257,7 +257,9 @@ Các endpoint này không cần authentication.
 
 **GET** `/api/artisans/public` - Lấy tất cả nghệ nhân
 
-**GET** `/api/artisans/public/{id}` - Lấy nghệ nhân theo ID
+**GET** `/api/artisans/public/{id}/detail` - Lấy chi tiết nghệ nhân (cho trang artisan: quick info, gallery, narrative, tours/culture liên quan)
+
+**GET** `/api/artisans/public/{id}` - Lấy nghệ nhân theo ID (entity thô)
 
 **GET** `/api/artisans/public/province/{provinceId}` - Lấy nghệ nhân theo tỉnh
 
@@ -486,6 +488,9 @@ Content-Type: multipart/form-data
 
 ### 4. Artisan
 
+**PUT** `/api/artisans/me` (role ARTISAN)  
+Nghệ nhân cập nhật hồ sơ của chính mình (ID lấy từ token). Tham số giống POST, chỉ gửi field cần đổi.
+
 **POST** `/api/artisans`
 
 **Body (Form Data):**
@@ -495,7 +500,13 @@ Content-Type: multipart/form-data
 - `bio`: "Tiểu sử" (optional)
 - `provinceId`: 1 (optional)
 - `workshopAddress`: "Địa chỉ" (optional)
+- `ethnicity`: "Mường" (optional)
+- `dateOfBirth`: "1959-01-15" (optional, yyyy-MM-dd)
+- `heroSubtitle`: "Mô tả hero" (optional)
+- `narrativeContent`: [{"title":"...","content":"...","imageUrl":"..."}] (optional, JSON string)
 - `profileImage`: [file] (optional)
+- `panoramaImage`: [file] (optional)
+- `images`: [file1, file2, ...] (optional, multiple)
 
 ### 5. Blog Post
 

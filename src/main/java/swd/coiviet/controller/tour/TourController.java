@@ -111,15 +111,21 @@ public class TourController {
             @RequestParam @NotBlank(message = "Tiêu đề không được để trống") String title,
             @Parameter(description = "Slug của tour", required = false)
             @RequestParam(required = false) String slug,
-            @Parameter(description = "Mô tả", required = false)
+            @Parameter(description = "Mô tả / Giới thiệu chung", required = false)
             @RequestParam(required = false) String description,
+            @Parameter(description = "Thời điểm đẹp nhất (e.g. Tháng 10 - Tháng 3 mùa khô)", required = false)
+            @RequestParam(required = false) String bestSeason,
+            @Parameter(description = "Cách di chuyển đến vùng (e.g. Xe máy, xe khách từ Pleiku)", required = false)
+            @RequestParam(required = false) String transportation,
+            @Parameter(description = "Lưu ý ứng xử văn hoá - JSON array hoặc text", required = false)
+            @RequestParam(required = false) String culturalTips,
             @Parameter(description = "Số giờ tour", required = false)
             @RequestParam(required = false) java.math.BigDecimal durationHours,
             @Parameter(description = "Số người tham gia tối đa", required = false)
             @RequestParam(required = false) Integer maxParticipants,
             @Parameter(description = "Giá tour", required = false)
             @RequestParam(required = false) java.math.BigDecimal price,
-            @Parameter(description = "ID nghệ nhân", required = false)
+            @Parameter(description = "ID nghệ nhân (tùy chọn - không truyền thì tour không có nghệ nhân hướng dẫn)")
             @RequestParam(required = false) Long artisanId,
             @Parameter(description = "Danh sách ID culture items gắn với tour (địa điểm nổi bật, lễ hội, ẩm thực). Thứ tự = thứ tự hiển thị.")
             @RequestParam(required = false) List<Long> cultureItemIds,
@@ -132,8 +138,8 @@ public class TourController {
             // Get province
             Province province = provinceService.findById(provinceId)
                     .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Tỉnh thành không tồn tại"));
-            
-            // Get artisan if provided
+
+            // Get artisan (optional)
             Artisan artisan = null;
             if (artisanId != null) {
                 artisan = artisanService.findById(artisanId)
@@ -146,6 +152,9 @@ public class TourController {
                     .title(title)
                     .slug(slug)
                     .description(description)
+                    .bestSeason(bestSeason)
+                    .transportation(transportation)
+                    .culturalTips(culturalTips)
                     .durationHours(durationHours)
                     .maxParticipants(maxParticipants)
                     .price(price)
@@ -198,8 +207,14 @@ public class TourController {
             @RequestParam(required = false) String title,
             @Parameter(description = "Slug của tour", required = false)
             @RequestParam(required = false) String slug,
-            @Parameter(description = "Mô tả", required = false)
+            @Parameter(description = "Mô tả / Giới thiệu chung", required = false)
             @RequestParam(required = false) String description,
+            @Parameter(description = "Thời điểm đẹp nhất", required = false)
+            @RequestParam(required = false) String bestSeason,
+            @Parameter(description = "Cách di chuyển đến vùng", required = false)
+            @RequestParam(required = false) String transportation,
+            @Parameter(description = "Lưu ý ứng xử văn hoá - JSON array hoặc text", required = false)
+            @RequestParam(required = false) String culturalTips,
             @Parameter(description = "Số giờ tour", required = false)
             @RequestParam(required = false) java.math.BigDecimal durationHours,
             @Parameter(description = "Số người tham gia tối đa", required = false)
@@ -208,6 +223,8 @@ public class TourController {
             @RequestParam(required = false) java.math.BigDecimal price,
             @Parameter(description = "ID nghệ nhân", required = false)
             @RequestParam(required = false) Long artisanId,
+            @Parameter(description = "Xóa nghệ nhân khỏi tour khi true")
+            @RequestParam(required = false) Boolean clearArtisan,
             @Parameter(description = "Danh sách ID culture items (thay thế toàn bộ). Truyền rỗng để xóa hết.")
             @RequestParam(required = false) List<Long> cultureItemIds,
             @Parameter(description = "Thumbnail image mới (nếu có)", schema = @Schema(type = "string", format = "binary"))
@@ -228,10 +245,15 @@ public class TourController {
             if (title != null) existing.setTitle(title);
             if (slug != null) existing.setSlug(slug);
             if (description != null) existing.setDescription(description);
+            if (bestSeason != null) existing.setBestSeason(bestSeason);
+            if (transportation != null) existing.setTransportation(transportation);
+            if (culturalTips != null) existing.setCulturalTips(culturalTips);
             if (durationHours != null) existing.setDurationHours(durationHours);
             if (maxParticipants != null) existing.setMaxParticipants(maxParticipants);
             if (price != null) existing.setPrice(price);
-            if (artisanId != null) {
+            if (Boolean.TRUE.equals(clearArtisan)) {
+                existing.setArtisan(null);
+            } else if (artisanId != null) {
                 Artisan artisan = artisanService.findById(artisanId)
                         .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Nghệ nhân không tồn tại"));
                 existing.setArtisan(artisan);

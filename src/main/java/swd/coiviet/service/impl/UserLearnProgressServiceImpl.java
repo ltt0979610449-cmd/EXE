@@ -162,7 +162,7 @@ public class UserLearnProgressServiceImpl implements UserLearnProgressService {
     @Override
     @Transactional
     public QuizResultResponse submitQuiz(Long userId, Long quizId, Map<Long, Long> answers, Integer timeTakenSeconds) {
-        Quiz quiz = quizService.findById(quizId)
+        Quiz quiz = quizService.findByIdWithQuestions(quizId)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Quiz không tồn tại"));
         User user = new User();
         user.setId(userId);

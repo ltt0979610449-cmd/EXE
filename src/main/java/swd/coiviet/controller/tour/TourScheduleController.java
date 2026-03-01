@@ -77,6 +77,11 @@ public class TourScheduleController {
         Tour tour = tourService.findById(tourId)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Tour không tồn tại"));
 
+        if (tour.getArtisan() == null) {
+            throw new AppException(ErrorCode.INVALID_REQUEST,
+                    "Tour chưa có nghệ nhân. Vui lòng gắn nghệ nhân cho tour trước khi tạo lịch.");
+        }
+
         TourSchedule schedule = TourSchedule.builder()
                 .tour(tour)
                 .tourDate(tourDate)
@@ -117,6 +122,10 @@ public class TourScheduleController {
         if (tourId != null) {
             Tour tour = tourService.findById(tourId)
                     .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Tour không tồn tại"));
+            if (tour.getArtisan() == null) {
+                throw new AppException(ErrorCode.INVALID_REQUEST,
+                        "Tour chưa có nghệ nhân. Vui lòng gắn nghệ nhân cho tour trước khi gán lịch.");
+            }
             existing.setTour(tour);
         }
         if (tourDate != null) existing.setTourDate(tourDate);

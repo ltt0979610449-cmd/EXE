@@ -171,6 +171,18 @@ public class VideoController {
         return ResponseEntity.ok(ApiResponse.success(updated, "Publish video thành công"));
     }
 
+    @PutMapping("/{id}/status")
+    @Operation(summary = "Điều chỉnh trạng thái video", description = "Đặt trạng thái: DRAFT, PUBLISHED, ARCHIVED. Cần role STAFF/ADMIN.")
+    public ResponseEntity<ApiResponse<Video>> updateVideoStatus(
+            @PathVariable Long id,
+            @RequestParam PublicationStatus status) {
+        Video video = videoService.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Video không tồn tại"));
+        video.setStatus(status);
+        Video updated = videoService.save(video);
+        return ResponseEntity.ok(ApiResponse.success(updated, "Cập nhật trạng thái thành công"));
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Xóa video", description = "Xóa video")
     public ResponseEntity<ApiResponse<Void>> deleteVideo(@PathVariable Long id) {

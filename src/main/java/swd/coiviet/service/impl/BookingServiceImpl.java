@@ -27,9 +27,11 @@ import swd.coiviet.service.TourWorkflowService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Service
 public class BookingServiceImpl implements BookingService {
@@ -92,6 +94,113 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public void deleteById(Long id) {
         bookingRepo.deleteById(id);
+    }
+
+    @Override
+    public List<Booking> findByArtisanIdWithFilters(Long artisanId, BookingStatus status, LocalDate from, LocalDate to) {
+        List<Booking> all = bookingRepo.findByArtisanId(artisanId);
+        Stream<Booking> stream = all.stream();
+        if (status != null) {
+            stream = stream.filter(b -> b.getStatus() == status);
+        }
+        if (from != null) {
+            LocalDateTime fromDt = from.atStartOfDay();
+            stream = stream.filter(b -> b.getCreatedAt() != null && !b.getCreatedAt().isBefore(fromDt));
+        }
+        if (to != null) {
+            LocalDateTime toDt = to.atTime(LocalTime.MAX);
+            stream = stream.filter(b -> b.getCreatedAt() != null && !b.getCreatedAt().isAfter(toDt));
+        }
+        return stream.sorted((a, b) -> (b.getCreatedAt() != null && a.getCreatedAt() != null)
+                ? b.getCreatedAt().compareTo(a.getCreatedAt()) : 0)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public BookingResponse confirmBookingByArtisan(Long artisanId, Long bookingId) {
+        Booking booking = bookingRepo.findById(bookingId)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Booking không tồn tại"));
+
+        if (booking.getTour() == null || booking.getTour().getArtisan() == null
+                || !booking.getTour().getArtisan().getId().equals(artisanId)) {
+            throw new AppException(ErrorCode.FORBIDDEN, "Bạn không có quyền xác nhận booking này");
+        }
+
+        if (booking.getStatus() != BookingStatus.PENDING) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Chỉ có thể xác nhận booking đang chờ xử lý");
+        }
+
+        booking.setStatus(BookingStatus.CONFIRMED);
+        booking.setUpdatedAt(LocalDateTime.now());
+        booking = bookingRepo.save(booking);
+
+        notificationService.createBookingConfirmationNotification(
+                booking.getUser().getId(), booking.getId(), booking.getBookingCode());
+
+        return mapToResponse(booking);
+    }
+
+    @Override
+    @Transactional
+    public BookingResponse cancelBookingByArtisan(Long artisanId, Long bookingId, CancelBookingRequest request) {
+        Booking booking = bookingRepo.findById(bookingId)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Booking không tồn tại"));
+
+        if (booking.getTour() == null || booking.getTour().getArtisan() == null
+                || !booking.getTour().getArtisan().getId().equals(artisanId)) {
+            throw new AppException(ErrorCode.FORBIDDEN, "Bạn không có quyền hủy booking này");
+        }
+
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Booking đã được hủy");
+        }
+
+        if (booking.getStatus() == BookingStatus.COMPLETED) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Không thể hủy booking đã hoàn thành");
+        }
+
+        BigDecimal cancellationFee = calculateCancellationFee(booking);
+        BigDecimal refundAmount = booking.getFinalAmount().subtract(cancellationFee);
+
+        booking.setStatus(BookingStatus.CANCELLED);
+        booking.setCancelledAt(LocalDateTime.now());
+        booking.setCancellationFee(cancellationFee);
+        booking.setRefundAmount(refundAmount);
+        booking.setUpdatedAt(LocalDateTime.now());
+        booking = bookingRepo.save(booking);
+
+        List<Payment> payments = paymentService.findByBookingId(bookingId);
+        for (Payment payment : payments) {
+            if (payment.getStatus() == PaymentStatus.PAID) {
+                payment.setStatus(PaymentStatus.REFUNDED);
+                payment.setRefundedAt(LocalDateTime.now());
+                payment.setRefundReason(request != null && request.getReason() != null
+                        ? request.getReason() : "Nghệ nhân hủy tour");
+                paymentService.save(payment);
+            }
+        }
+
+        TourSchedule schedule = booking.getTourSchedule();
+        schedule.setBookedSlots(Math.max(0, schedule.getBookedSlots() - booking.getNumParticipants()));
+        if (schedule.getStatus() == swd.coiviet.enums.TourScheduleStatus.FULL) {
+            schedule.setStatus(swd.coiviet.enums.TourScheduleStatus.SCHEDULED);
+        }
+        tourScheduleService.save(schedule);
+
+        if (booking.getContactEmail() != null) {
+            emailService.sendBookingCancellation(
+                    booking.getContactEmail(),
+                    booking.getBookingCode(),
+                    request != null && request.getReason() != null ? request.getReason() : "Nghệ nhân hủy tour",
+                    refundAmount
+            );
+        }
+
+        notificationService.createBookingCancellationNotification(
+                booking.getUser().getId(), booking.getId(), booking.getBookingCode());
+
+        return mapToResponse(booking);
     }
 
     @Override
@@ -285,6 +394,11 @@ public class BookingServiceImpl implements BookingService {
         // Send notification
         notificationService.createBookingCancellationNotification(userId, booking.getId(), booking.getBookingCode());
 
+        return mapToResponse(booking);
+    }
+
+    @Override
+    public BookingResponse toResponse(Booking booking) {
         return mapToResponse(booking);
     }
 

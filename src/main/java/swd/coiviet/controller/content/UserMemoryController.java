@@ -270,6 +270,24 @@ public class UserMemoryController {
         return ResponseEntity.ok(ApiResponse.success(updated, "Publish ký ức thành công"));
     }
 
+    @PutMapping("/{id}/status")
+    @Operation(summary = "Điều chỉnh trạng thái ký ức", description = "Đặt trạng thái: DRAFT, PUBLISHED, ARCHIVED. Chỉ chủ sở hữu mới có quyền.")
+    public ResponseEntity<ApiResponse<UserMemory>> updateMemoryStatus(
+            @PathVariable Long id,
+            @RequestParam PublicationStatus status,
+            HttpServletRequest httpRequest) {
+        Long userId = getCurrentUserId(httpRequest);
+        UserMemory memory = userMemoryService.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Ký ức không tồn tại"));
+        if (!memory.getUser().getId().equals(userId)) {
+            throw new AppException(ErrorCode.FORBIDDEN, "Bạn không có quyền điều chỉnh ký ức này");
+        }
+        memory.setStatus(status);
+        memory.setUpdatedAt(LocalDateTime.now());
+        UserMemory updated = userMemoryService.save(memory);
+        return ResponseEntity.ok(ApiResponse.success(updated, "Cập nhật trạng thái thành công"));
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Xóa ký ức", description = "Xóa ký ức của user")
     public ResponseEntity<ApiResponse<Void>> deleteMemory(@PathVariable Long id, HttpServletRequest httpRequest) {

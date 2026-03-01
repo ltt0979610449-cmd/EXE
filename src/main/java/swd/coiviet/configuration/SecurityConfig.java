@@ -60,6 +60,9 @@ public class SecurityConfig {
                         // Admin endpoints: chỉ ADMIN
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
+                        // Artisan self-service endpoints: chỉ ARTISAN
+                        .requestMatchers("/api/artisans/me/**").hasRole("ARTISAN")
+
                 // Staff endpoints: STAFF hoặc ADMIN
                 .requestMatchers("/api/staff/**", "/api/tours", "/api/tours/**", 
                         "/api/provinces", "/api/provinces/**", "/api/tour-schedules/**",
@@ -103,7 +106,7 @@ public class SecurityConfig {
                         .title("CoiViet")
                         .version("1.0")
                         .description("API documentation for the CoiViet System"))
-                .addServersItem(new Server().url("https://exe-1-k8ma.onrender.com/"));
+                   .addServersItem(new Server().url("https://exe-1-k8ma.onrender.com/"));
     }
 
     @Bean
