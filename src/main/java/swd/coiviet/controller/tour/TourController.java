@@ -18,13 +18,18 @@ import swd.coiviet.model.Artisan;
 import swd.coiviet.model.CultureItem;
 import swd.coiviet.model.Province;
 import swd.coiviet.model.Tour;
+import swd.coiviet.model.TourSchedule;
 import swd.coiviet.service.ArtisanService;
 import swd.coiviet.service.CloudinaryService;
 import swd.coiviet.service.ProvinceService;
 import swd.coiviet.service.TourCultureItemService;
+import swd.coiviet.service.TourScheduleService;
 import swd.coiviet.service.TourService;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -34,13 +39,17 @@ import java.util.List;
 public class TourController {
 
     private final TourService tourService;
+    private final TourScheduleService tourScheduleService;
     private final CloudinaryService cloudinaryService;
     private final ProvinceService provinceService;
     private final ArtisanService artisanService;
     private final TourCultureItemService tourCultureItemService;
 
-    public TourController(TourService tourService, CloudinaryService cloudinaryService, ProvinceService provinceService, ArtisanService artisanService, TourCultureItemService tourCultureItemService) {
+    public TourController(TourService tourService, TourScheduleService tourScheduleService,
+                          CloudinaryService cloudinaryService, ProvinceService provinceService,
+                          ArtisanService artisanService, TourCultureItemService tourCultureItemService) {
         this.tourService = tourService;
+        this.tourScheduleService = tourScheduleService;
         this.cloudinaryService = cloudinaryService;
         this.provinceService = provinceService;
         this.artisanService = artisanService;
@@ -100,6 +109,20 @@ public class TourController {
     @Operation(summary = "Lấy địa điểm nổi bật của tour", description = "Alias cho culture-items không filter. Fallback theo province nếu tour chưa gắn items.")
     public ResponseEntity<ApiResponse<List<CultureItem>>> getTourHighlights(@PathVariable Long id) {
         return getTourCultureItems(id, null);
+    }
+
+    @GetMapping("/public/{id}/schedules")
+    @Operation(summary = "Lấy lịch trình tour theo tour ID", description = "Trả về danh sách lịch trình của tour. Có thể filter theo ngày (date) nếu cần.")
+    public ResponseEntity<ApiResponse<List<TourSchedule>>> getSchedulesByTourId(
+            @PathVariable Long id,
+            @Parameter(description = "Lọc theo ngày (yyyy-MM-dd)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        tourService.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Tour không tồn tại"));
+        List<TourSchedule> schedules = date != null
+                ? tourScheduleService.findByTourIdAndDate(id, date)
+                : tourScheduleService.findByTourId(id);
+        return ResponseEntity.ok(ApiResponse.success(schedules));
     }
 
     @PostMapping(consumes = {"multipart/form-data"})

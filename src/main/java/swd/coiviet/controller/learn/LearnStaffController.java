@@ -201,6 +201,16 @@ public class LearnStaffController {
         return ResponseEntity.ok(ApiResponse.success(null, "Xóa module thành công"));
     }
 
+    @GetMapping("/lessons")
+    @Operation(summary = "Danh sách tất cả lesson")
+    public ResponseEntity<ApiResponse<List<LearnLessonResponse>>> getAllLessons() {
+        List<LearnLesson> lessons = lessonService.findAll();
+        List<LearnLessonResponse> responses = lessons.stream()
+                .map(this::toLessonResponse)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.success(responses));
+    }
+
     @PostMapping(value = "/lessons", consumes = {"multipart/form-data"})
     @Operation(summary = "Tạo lesson")
     public ResponseEntity<ApiResponse<LearnLessonResponse>> createLesson(

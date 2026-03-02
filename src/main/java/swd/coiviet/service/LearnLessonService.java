@@ -8,6 +8,8 @@ import java.util.Optional;
 
 public interface LearnLessonService {
     LearnLesson save(LearnLesson l);
+    List<LearnLesson> findAll();
+    List<LearnLesson> findAllByStatus(PublicationStatus status);
     Optional<LearnLesson> findById(Long id);
     Optional<LearnLesson> findBySlug(String slug);
     List<LearnLesson> findByModuleId(Long moduleId);

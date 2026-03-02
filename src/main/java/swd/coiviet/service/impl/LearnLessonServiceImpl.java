@@ -1,5 +1,6 @@
 package swd.coiviet.service.impl;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import swd.coiviet.enums.PublicationStatus;
@@ -21,6 +22,16 @@ public class LearnLessonServiceImpl implements LearnLessonService {
     @Override
     public LearnLesson save(LearnLesson l) {
         return repo.save(l);
+    }
+
+    @Override
+    public List<LearnLesson> findAll() {
+        return repo.findAll(Sort.by("orderIndex"));
+    }
+
+    @Override
+    public List<LearnLesson> findAllByStatus(PublicationStatus status) {
+        return repo.findAllByStatusOrderByOrderIndexAsc(status);
     }
 
     @Override

@@ -71,6 +71,24 @@ public class LearnController {
         return ResponseEntity.ok(swd.coiviet.dto.response.ApiResponse.success(toModuleDetailResponse(module)));
     }
 
+    @GetMapping("/public/lessons")
+    @Operation(summary = "Danh sách tất cả bài học đã publish")
+    public ResponseEntity<swd.coiviet.dto.response.ApiResponse<List<LearnLessonSummaryResponse>>> getAllLessons() {
+        List<LearnLesson> lessons = lessonService.findAllByStatus(PublicationStatus.PUBLISHED);
+        List<LearnLessonSummaryResponse> responses = lessons.stream()
+                .map(l -> LearnLessonSummaryResponse.builder()
+                        .id(l.getId())
+                        .title(l.getTitle())
+                        .slug(l.getSlug())
+                        .thumbnailUrl(l.getImageUrl())
+                        .duration(l.getEstimatedMinutes())
+                        .videoUrl(l.getVideoUrl())
+                        .orderIndex(l.getOrderIndex())
+                        .build())
+                .toList();
+        return ResponseEntity.ok(swd.coiviet.dto.response.ApiResponse.success(responses));
+    }
+
     @GetMapping("/public/lessons/{id}")
     @Operation(summary = "Chi tiết bài học")
     public ResponseEntity<swd.coiviet.dto.response.ApiResponse<LearnLessonResponse>> getLessonById(@PathVariable Long id) {

@@ -68,7 +68,7 @@ public class SecurityConfig {
                         "/api/provinces", "/api/provinces/**", "/api/tour-schedules/**",
                         "/api/artisans", "/api/artisans/**", "/api/culture-items",
                         "/api/culture-items/**", "/api/blog-posts", "/api/blog-posts/**",
-                        "/api/videos", "/api/videos/**", "/api/vouchers", "/api/vouchers/**").hasAnyRole("STAFF", "ADMIN")
+                        "/api/videos", "/api/videos/**", "/api/vouchers", "/api/vouchers/**").hasAnyRole("CUSTOMER","STAFF", "ADMIN")
 
                 // User endpoints + Learn (CUSTOMER, ARTISAN, ADMIN - Role enum thực tế)
                 .requestMatchers("/api/user/**", "/api/bookings/**", "/api/reviews/**", 
@@ -79,7 +79,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/chats/**").authenticated()
 
                         // AI Chat endpoints: authenticated users
-                        .requestMatchers("/api/ai-chat/**").authenticated()
+                        .requestMatchers("/api/ai-chat/**").permitAll()
 
                         // Các request khác: yêu cầu xác thực
                         .anyRequest().authenticated()
