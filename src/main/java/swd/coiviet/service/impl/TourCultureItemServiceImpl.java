@@ -1,6 +1,7 @@
 package swd.coiviet.service.impl;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import swd.coiviet.enums.CultureCategory;
 import swd.coiviet.exception.AppException;
 import swd.coiviet.exception.ErrorCode;
@@ -42,8 +43,9 @@ public class TourCultureItemServiceImpl implements TourCultureItemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CultureItem> findCultureItemsByTourId(Long tourId) {
-        List<CultureItem> linked = repository.findByTourIdOrderByDisplayOrderAsc(tourId).stream()
+        List<CultureItem> linked = repository.findByTourIdWithCultureItemsAndProvince(tourId).stream()
                 .map(TourCultureItem::getCultureItem)
                 .filter(ci -> ci.getStatus() == PublicationStatus.PUBLISHED)
                 .collect(Collectors.toList());
@@ -54,11 +56,12 @@ public class TourCultureItemServiceImpl implements TourCultureItemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CultureItem> findCultureItemsByTourIdAndCategory(Long tourId, CultureCategory category) {
         if (category == null) {
             return findCultureItemsByTourId(tourId);
         }
-        List<CultureItem> linked = repository.findByTourIdOrderByDisplayOrderAsc(tourId).stream()
+        List<CultureItem> linked = repository.findByTourIdWithCultureItemsAndProvince(tourId).stream()
                 .map(TourCultureItem::getCultureItem)
                 .filter(ci -> ci.getStatus() == PublicationStatus.PUBLISHED && ci.getCategory() == category)
                 .collect(Collectors.toList());
@@ -85,8 +88,9 @@ public class TourCultureItemServiceImpl implements TourCultureItemService {
     }
 
     @Override
+    @Transactional
     public void deleteByTourIdAndCultureItemId(Long tourId, Long cultureItemId) {
-        repository.findByTourIdOrderByDisplayOrderAsc(tourId).stream()
+        repository.findByTourIdWithCultureItemsAndProvince(tourId).stream()
                 .filter(tci -> tci.getCultureItem().getId().equals(cultureItemId))
                 .findFirst()
                 .ifPresent(repository::delete);

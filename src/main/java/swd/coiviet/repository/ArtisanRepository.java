@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface ArtisanRepository extends JpaRepository<Artisan, Long> {
     List<Artisan> findByProvinceId(Long provinceId);
     Optional<Artisan> findByUserId(Long userId);
+    List<Artisan> findBySpecializationContainingIgnoreCase(String specialization);
 }

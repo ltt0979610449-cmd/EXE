@@ -10,6 +10,7 @@ import java.util.List;
 
 public interface CultureItemRepository extends JpaRepository<CultureItem, Long> {
     List<CultureItem> findByProvinceId(Long provinceId);
+    List<CultureItem> findByTitleContainingIgnoreCase(String title);
     List<CultureItem> findByCategory(CultureCategory category);
     List<CultureItem> findByProvinceIdAndCategory(Long provinceId, CultureCategory category);
     List<CultureItem> findByStatus(PublicationStatus status);

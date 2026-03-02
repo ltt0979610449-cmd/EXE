@@ -13,6 +13,7 @@ import java.util.Optional;
 public interface LearnModuleRepository extends JpaRepository<LearnModule, Long> {
 
     List<LearnModule> findByStatusOrderByOrderIndexAsc(LearnModuleStatus status);
+    List<LearnModule> findByProvinceIdAndStatusOrderByOrderIndexAsc(Long provinceId, LearnModuleStatus status);
     List<LearnModule> findByCategoryIdAndStatusOrderByOrderIndexAsc(Long categoryId, LearnModuleStatus status);
     Optional<LearnModule> findBySlug(String slug);
 

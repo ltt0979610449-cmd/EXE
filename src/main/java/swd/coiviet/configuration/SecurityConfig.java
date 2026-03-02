@@ -78,6 +78,9 @@ public class SecurityConfig {
                         // Chat endpoints: authenticated users
                         .requestMatchers("/api/chats/**").authenticated()
 
+                        // AI Chat endpoints: authenticated users
+                        .requestMatchers("/api/ai-chat/**").authenticated()
+
                         // Các request khác: yêu cầu xác thực
                         .anyRequest().authenticated()
                 )
@@ -118,12 +121,12 @@ public class SecurityConfig {
         configuration.addAllowedOriginPattern("https://127.0.0.1:*");
         configuration.addAllowedOriginPattern("https://*.ngrok-free.app");
         configuration.addAllowedOriginPattern("https://*.railway.app");
-        configuration.addAllowedOriginPattern("https://*.up.railway.app");
+        configuration.addAllowedOriginPattern("https://exe-project-two.vercel.app/");
         configuration.addAllowedOriginPattern("http://localhost:8080");
         configuration.addAllowedOriginPattern("https://*.onrender.com");
         configuration.addAllowedOrigin("https://exe-1-k8ma.onrender.com");
         configuration.addAllowedMethod("*");
-        configuration.addAllowedHeader("*");
+        configuration.addAllowedHeader("*");    
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 
