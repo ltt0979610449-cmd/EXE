@@ -10,4 +10,6 @@ public interface VoucherService {
     Optional<Voucher> findByCode(String code);
     java.util.List<Voucher> findAll();
     void deleteById(Long id);
+
+    Optional<Voucher> findExistingVoucherForSchedule(Long tourScheduleId, Integer discountPercent);
 }

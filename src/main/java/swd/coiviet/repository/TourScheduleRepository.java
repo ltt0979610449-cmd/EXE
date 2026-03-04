@@ -8,11 +8,14 @@ import swd.coiviet.model.TourSchedule;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
 public interface TourScheduleRepository extends JpaRepository<TourSchedule, Long> {
     List<TourSchedule> findByTourIdAndTourDate(Long tourId, LocalDate tourDate);
+    @Query("SELECT ts FROM TourSchedule ts WHERE ts.tour.id = :tourId AND ts.tourDate = :tourDate AND ts.startTime = :startTime")
+    Optional<TourSchedule> findByTourIdAndTourDateAndStartTime(@Param("tourId") Long tourId, @Param("tourDate") LocalDate tourDate, @Param("startTime") LocalTime startTime);
     List<TourSchedule> findByTourId(Long tourId);
     List<TourSchedule> findByTourIdAndStatus(Long tourId, TourScheduleStatus status);
     long countByStatus(TourScheduleStatus status);

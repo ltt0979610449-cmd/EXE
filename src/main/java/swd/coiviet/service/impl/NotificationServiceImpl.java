@@ -110,6 +110,20 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public Notification createCashPendingNotification(Long userId, Long bookingId) {
+        Notification notification = Notification.builder()
+                .user(swd.coiviet.model.User.builder().id(userId).build())
+                .type("CASH_PENDING")
+                .title("Thanh toán tiền mặt")
+                .message("Bạn đã chọn thanh toán tiền mặt. Vui lòng thanh toán cho hướng dẫn viên khi tham gia tour.")
+                .relatedId(bookingId)
+                .isRead(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+        return save(notification);
+    }
+
+    @Override
     public Notification createTourLowBookingNotification(Long userId, Long tourScheduleId, String tourTitle) {
         Notification notification = Notification.builder()
                 .user(swd.coiviet.model.User.builder().id(userId).build())

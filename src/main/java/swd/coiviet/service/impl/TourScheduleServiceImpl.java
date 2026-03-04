@@ -6,6 +6,7 @@ import swd.coiviet.repository.TourScheduleRepository;
 import swd.coiviet.service.TourScheduleService;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,6 +30,11 @@ public class TourScheduleServiceImpl implements TourScheduleService {
 
     @Override
     public List<TourSchedule> findByTourId(Long tourId) { return repo.findByTourId(tourId); }
+
+    @Override
+    public Optional<TourSchedule> findByTourIdAndTourDateAndStartTime(Long tourId, LocalDate tourDate, LocalTime startTime) {
+        return repo.findByTourIdAndTourDateAndStartTime(tourId, tourDate, startTime);
+    }
 
     @Override
     public void deleteById(Long id) { repo.deleteById(id); }

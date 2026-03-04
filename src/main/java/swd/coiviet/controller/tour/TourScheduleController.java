@@ -82,6 +82,10 @@ public class TourScheduleController {
                     "Tour chưa có nghệ nhân. Vui lòng gắn nghệ nhân cho tour trước khi tạo lịch.");
         }
 
+        tourScheduleService.findByTourIdAndTourDateAndStartTime(tourId, tourDate, startTime).ifPresent(s -> {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Đã tồn tại lịch trình cho tour này vào ngày và giờ đã chọn");
+        });
+
         TourSchedule schedule = TourSchedule.builder()
                 .tour(tour)
                 .tourDate(tourDate)

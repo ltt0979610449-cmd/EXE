@@ -5,6 +5,8 @@ import swd.coiviet.model.Voucher;
 import swd.coiviet.repository.VoucherRepository;
 import swd.coiviet.service.VoucherService;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,4 +30,10 @@ public class VoucherServiceImpl implements VoucherService {
 
     @Override
     public void deleteById(Long id) { repo.deleteById(id); }
+
+    @Override
+    public Optional<Voucher> findExistingVoucherForSchedule(Long tourScheduleId, Integer discountPercent) {
+        return repo.findFirstByTourSchedule_IdAndDiscountValueAndIsActiveTrueAndValidUntilAfter(
+                tourScheduleId, BigDecimal.valueOf(discountPercent), LocalDateTime.now());
+    }
 }

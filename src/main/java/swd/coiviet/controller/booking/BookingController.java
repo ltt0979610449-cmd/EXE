@@ -16,6 +16,7 @@ import swd.coiviet.exception.AppException;
 import swd.coiviet.exception.ErrorCode;
 import swd.coiviet.model.Booking;
 import swd.coiviet.service.BookingService;
+import swd.coiviet.enums.Role;
 import swd.coiviet.service.TourWorkflowService;
 
 import java.util.List;
@@ -51,12 +52,27 @@ public class BookingController {
     }
 
     /**
-     * Lấy danh sách booking của user hiện tại
+     * Lấy booking theo mã (public - dùng cho trang success sau thanh toán)
+     * Không cần auth vì bookingCode đã hiển thị trong URL redirect từ MoMo/VNPay
+     */
+    @GetMapping("/public/by-code/{bookingCode}")
+    public ResponseEntity<ApiResponse<BookingResponse>> getBookingByCode(@PathVariable String bookingCode) {
+        Booking booking = bookingService.findByBookingCode(bookingCode)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Booking không tồn tại"));
+        return ResponseEntity.ok(ApiResponse.success(mapToResponse(booking)));
+    }
+
+    /**
+     * Lấy danh sách booking.
+     * ADMIN, STAFF: xem tất cả. CUSTOMER, ARTISAN: chỉ xem booking của mình.
      */
     @GetMapping
     public ResponseEntity<ApiResponse<List<BookingResponse>>> getMyBookings(HttpServletRequest httpRequest) {
         Long userId = getCurrentUserId(httpRequest);
-        List<Booking> bookings = bookingService.findByUserId(userId);
+        String role = getCurrentUserRole(httpRequest);
+        List<Booking> bookings = (Role.ADMIN.name().equals(role) || Role.STAFF.name().equals(role))
+                ? bookingService.findAll()
+                : bookingService.findByUserId(userId);
         List<BookingResponse> responses = bookings.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -64,18 +80,21 @@ public class BookingController {
     }
 
     /**
-     * Lấy chi tiết booking
+     * Lấy chi tiết booking.
+     * ADMIN, STAFF: xem bất kỳ. CUSTOMER, ARTISAN: chỉ xem booking của mình.
      */
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<BookingResponse>> getBooking(
             @PathVariable Long id,
             HttpServletRequest httpRequest) {
         Long userId = getCurrentUserId(httpRequest);
+        String role = getCurrentUserRole(httpRequest);
         Booking booking = bookingService.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Booking không tồn tại"));
         
-        // Check ownership
-        if (!booking.getUser().getId().equals(userId)) {
+        // ADMIN, STAFF: được xem tất cả. Còn lại: kiểm tra ownership
+        if (!Role.ADMIN.name().equals(role) && !Role.STAFF.name().equals(role)
+                && !booking.getUser().getId().equals(userId)) {
             throw new AppException(ErrorCode.FORBIDDEN, "Bạn không có quyền xem booking này");
         }
         
@@ -120,18 +139,20 @@ public class BookingController {
     }
 
     /**
-     * Tính phí hủy tour
+     * Tính phí hủy tour.
+     * ADMIN, STAFF: xem bất kỳ. CUSTOMER, ARTISAN: chỉ booking của mình.
      */
     @GetMapping("/{id}/cancellation-fee")
     public ResponseEntity<ApiResponse<java.math.BigDecimal>> getCancellationFee(
             @PathVariable Long id,
             HttpServletRequest httpRequest) {
         Long userId = getCurrentUserId(httpRequest);
+        String role = getCurrentUserRole(httpRequest);
         Booking booking = bookingService.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Booking không tồn tại"));
         
-        // Check ownership
-        if (!booking.getUser().getId().equals(userId)) {
+        if (!Role.ADMIN.name().equals(role) && !Role.STAFF.name().equals(role)
+                && !booking.getUser().getId().equals(userId)) {
             throw new AppException(ErrorCode.FORBIDDEN, "Bạn không có quyền xem booking này");
         }
         
@@ -162,6 +183,26 @@ public class BookingController {
             return Long.valueOf(userId);
         } catch (Exception e) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Token không hợp lệ: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Lấy role từ JWT token
+     */
+    private String getCurrentUserRole(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
+        }
+        String token = authHeader.substring(7);
+        try {
+            if (!jwtUtil.validateToken(token)) {
+                return null;
+            }
+            String role = jwtUtil.getRoleFromToken(token);
+            return role != null ? role : Role.CUSTOMER.name();
+        } catch (Exception e) {
+            return Role.CUSTOMER.name();
         }
     }
 

@@ -51,6 +51,9 @@ public class JwtFilter extends OncePerRequestFilter {
                     .getBody();
             String username = claims.getSubject();
             String role = claims.get("role", String.class);
+            if (role == null || role.isBlank()) {
+                role = "CUSTOMER";
+            }
             Integer userId = claims.get("userId", Integer.class);
 
             // Check if user is banned in DB

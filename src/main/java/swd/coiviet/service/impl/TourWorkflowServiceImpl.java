@@ -110,6 +110,9 @@ public class TourWorkflowServiceImpl implements TourWorkflowService {
 
         if (daysUntilTour > 7) {
             // Còn >7 ngày: Đẩy ads, telesale, khuyến mãi
+            if (voucherService.findExistingVoucherForSchedule(schedule.getId(), 20).isPresent()) {
+                return; // Đã có voucher 20%, không tạo lại
+            }
             logger.info("Tour schedule {} còn {} ngày, số lượng booking thấp. Đẩy ads và khuyến mãi", 
                     schedule.getId(), daysUntilTour);
             
@@ -143,6 +146,9 @@ public class TourWorkflowServiceImpl implements TourWorkflowService {
             
         } else if (daysUntilTour >= 3 && daysUntilTour <= 5) {
             // Còn 3-5 ngày: Gửi email cho khách, đề xuất tour dự phòng
+            if (voucherService.findExistingVoucherForSchedule(schedule.getId(), 30).isPresent()) {
+                return; // Đã có voucher 30%, không tạo lại
+            }
             logger.info("Tour schedule {} còn {} ngày, số lượng booking thấp. Gửi email cho khách", 
                     schedule.getId(), daysUntilTour);
             
@@ -381,6 +387,7 @@ public class TourWorkflowServiceImpl implements TourWorkflowService {
                 .validUntil(schedule.getTourDate().atTime(LocalTime.MAX))
                 .isActive(true)
                 .createdAt(LocalDateTime.now())
+                .tourSchedule(schedule)
                 .build();
         
         voucher = voucherService.save(voucher);

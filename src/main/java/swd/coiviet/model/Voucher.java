@@ -34,4 +34,8 @@ public class Voucher {
     private Boolean isActive;
 
     private LocalDateTime createdAt;
+
+    @ManyToOne
+    @JoinColumn(name = "tour_schedule_id")
+    private TourSchedule tourSchedule;
 }

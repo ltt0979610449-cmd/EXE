@@ -14,6 +14,7 @@ public interface BookingService {
     Booking save(Booking b);
     Optional<Booking> findById(Long id);
     Optional<Booking> findByBookingCode(String code);
+    List<Booking> findAll();
     List<Booking> findByUserId(Long userId);
     List<Booking> findByTourScheduleId(Long tourScheduleId);
     void deleteById(Long id);
@@ -27,4 +28,10 @@ public interface BookingService {
     BookingResponse cancelBooking(Long userId, Long bookingId, CancelBookingRequest request);
     java.math.BigDecimal calculateCancellationFee(Booking booking);
     BookingResponse toResponse(Booking booking);
+
+    /** Tăng totalBookings của tour khi thanh toán thành công */
+    void incrementTourTotalBookings(Booking booking);
+
+    /** Giảm totalBookings của tour khi hủy booking đã thanh toán */
+    void decrementTourTotalBookings(Booking booking);
 }

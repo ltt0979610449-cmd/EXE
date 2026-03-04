@@ -55,7 +55,7 @@ public class SecurityConfig {
                         "/api/reviews/tour/**", "/api/public/home/**",
                         "/api/user-memories/public/**", "/api/vouchers/public/**",
                         "/api/payments/momo/**", "/api/payments/vnpay/**",
-                        "/api/learn/public/**").permitAll()
+                        "/api/bookings/public/**", "/api/learn/public/**").permitAll()
 
                         // Admin endpoints: chỉ ADMIN
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

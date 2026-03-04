@@ -3,6 +3,7 @@ package swd.coiviet.controller.payment;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -13,10 +14,12 @@ import swd.coiviet.dto.response.ApiResponse;
 import swd.coiviet.dto.response.PaymentResponse;
 import swd.coiviet.enums.PaymentMethod;
 import swd.coiviet.enums.PaymentStatus;
+import swd.coiviet.enums.Role;
 import swd.coiviet.exception.AppException;
 import swd.coiviet.exception.ErrorCode;
 import swd.coiviet.model.Booking;
 import swd.coiviet.model.Payment;
+import swd.coiviet.service.ArtisanService;
 import swd.coiviet.service.BookingService;
 import swd.coiviet.service.NotificationService;
 import swd.coiviet.service.PaymentGatewayService;
@@ -34,19 +37,22 @@ public class PaymentController {
     private final PaymentGatewayService paymentGatewayService;
     private final BookingService bookingService;
     private final NotificationService notificationService;
+    private final ArtisanService artisanService;
     private final JwtUtil jwtUtil;
 
     public PaymentController(PaymentService paymentService, PaymentGatewayService paymentGatewayService,
                             BookingService bookingService, NotificationService notificationService,
-                            JwtUtil jwtUtil) {
+                            ArtisanService artisanService, JwtUtil jwtUtil) {
         this.paymentService = paymentService;
         this.paymentGatewayService = paymentGatewayService;
         this.bookingService = bookingService;
         this.notificationService = notificationService;
+        this.artisanService = artisanService;
         this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/create")
+    @Transactional
     @Operation(summary = "Tạo payment và lấy payment URL", description = "Tạo payment record và lấy URL thanh toán từ MoMo/VNPay")
     public ResponseEntity<ApiResponse<PaymentResponse>> createPayment(
             @Validated @RequestBody CreatePaymentRequest request,
@@ -67,9 +73,10 @@ public class PaymentController {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Booking đã được thanh toán");
         }
         
-        // Get or create payment
+        // Get or create payment (for CASH, also accept PENDING_CASH for idempotency)
         Payment payment = paymentService.findByBookingId(request.getBookingId()).stream()
-                .filter(p -> p.getStatus() == PaymentStatus.UNPAID)
+                .filter(p -> p.getStatus() == PaymentStatus.UNPAID
+                        || (request.getPaymentMethod() == PaymentMethod.CASH && p.getStatus() == PaymentStatus.PENDING_CASH))
                 .findFirst()
                 .orElseGet(() -> {
                     Payment newPayment = Payment.builder()
@@ -94,24 +101,31 @@ public class PaymentController {
             String ipAddress = VnPayConfiguration.getIpAddress(httpRequest);
             paymentUrl = paymentGatewayService.createVnPayPaymentUrl(payment, returnUrl, ipAddress);
         } else if (request.getPaymentMethod() == PaymentMethod.CASH) {
-            // Cash payment - mark as paid immediately
-            payment.setStatus(PaymentStatus.PAID);
-            payment.setPaidAt(LocalDateTime.now());
-            payment = paymentService.save(payment);
-            
-            booking.setPaymentStatus(PaymentStatus.PAID);
-            booking.setStatus(swd.coiviet.enums.BookingStatus.CONFIRMED);
-            bookingService.save(booking);
-            
-            // Send notification
-            notificationService.createPaymentSuccessNotification(
-                    userId, booking.getId(), booking.getFinalAmount().toString());
+            // Cash payment - Pay-at-Property: chờ Artisan/Staff xác nhận đã nhận tiền
+            if (payment.getStatus() != PaymentStatus.PENDING_CASH) {
+                payment.setPaymentMethod(PaymentMethod.CASH);
+                payment.setStatus(PaymentStatus.PENDING_CASH);
+                payment = paymentService.save(payment);
+                
+                // Cập nhật booking qua reference từ payment để đảm bảo đồng bộ
+                Booking bookingToUpdate = payment.getBooking();
+                bookingToUpdate.setPaymentMethod(PaymentMethod.CASH);
+                bookingToUpdate.setPaymentStatus(PaymentStatus.PENDING_CASH);
+                bookingToUpdate.setStatus(swd.coiviet.enums.BookingStatus.PENDING);
+                bookingToUpdate.setUpdatedAt(LocalDateTime.now());
+                bookingService.save(bookingToUpdate);
+                
+                notificationService.createCashPendingNotification(userId, bookingToUpdate.getId());
+            }
         }
         
         PaymentResponse response = mapToResponse(payment);
         response.setPaymentUrl(paymentUrl);
         
-        return ResponseEntity.ok(ApiResponse.success(response, "Tạo payment thành công"));
+        String message = request.getPaymentMethod() == PaymentMethod.CASH
+                ? "Đặt tour thành công. Vui lòng thanh toán tiền mặt cho hướng dẫn viên khi tham gia tour."
+                : "Tạo payment thành công";
+        return ResponseEntity.ok(ApiResponse.success(response, message));
     }
 
     @GetMapping("/{id}")
@@ -129,8 +143,64 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(mapToResponse(payment)));
     }
 
+    @PostMapping("/confirm-cash/{bookingId}")
+    @PreAuthorize("hasAnyRole('ARTISAN', 'STAFF', 'ADMIN')")
+    @Operation(summary = "Xác nhận đã nhận tiền mặt", description = "Artisan/Staff xác nhận đã nhận tiền mặt từ khách (Pay-at-Property)")
+    @Transactional
+    public ResponseEntity<ApiResponse<PaymentResponse>> confirmCashPayment(
+            @PathVariable Long bookingId,
+            HttpServletRequest httpRequest) {
+        Long userId = getCurrentUserId(httpRequest);
+        String role = getCurrentUserRole(httpRequest);
+
+        Booking booking = bookingService.findById(bookingId)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Booking không tồn tại"));
+
+        if (booking.getPaymentMethod() != PaymentMethod.CASH) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Booking này không phải thanh toán tiền mặt");
+        }
+        // Chấp nhận cả UNPAID (chỉ createBooking) và PENDING_CASH (đã gọi createPayment)
+        if (booking.getPaymentStatus() != PaymentStatus.PENDING_CASH && booking.getPaymentStatus() != PaymentStatus.UNPAID) {
+            throw new AppException(ErrorCode.INVALID_REQUEST,
+                    "Chỉ có thể xác nhận booking đang chờ thanh toán tiền mặt");
+        }
+
+        // Artisan: chỉ xác nhận được booking của tour mình quản lý
+        if (Role.ARTISAN.name().equals(role)) {
+            var artisan = artisanService.findByUserId(userId)
+                    .orElseThrow(() -> new AppException(ErrorCode.FORBIDDEN, "Bạn không phải nghệ nhân"));
+            if (booking.getTour() == null || booking.getTour().getArtisan() == null
+                    || !booking.getTour().getArtisan().getId().equals(artisan.getId())) {
+                throw new AppException(ErrorCode.FORBIDDEN, "Bạn không có quyền xác nhận thanh toán booking này");
+            }
+        }
+
+        Payment payment = paymentService.findByBookingId(bookingId).stream()
+                .filter(p -> p.getPaymentMethod() == PaymentMethod.CASH
+                        && (p.getStatus() == PaymentStatus.PENDING_CASH || p.getStatus() == PaymentStatus.UNPAID))
+                .findFirst()
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Payment không tồn tại"));
+
+        payment.setStatus(PaymentStatus.PAID);
+        payment.setPaidAt(LocalDateTime.now());
+        payment = paymentService.save(payment);
+
+        booking.setPaymentStatus(PaymentStatus.PAID);
+        booking.setPaidAt(LocalDateTime.now());
+        booking.setStatus(swd.coiviet.enums.BookingStatus.CONFIRMED);
+        bookingService.save(booking);
+        bookingService.incrementTourTotalBookings(booking);
+
+        notificationService.createPaymentSuccessNotification(
+                booking.getUser().getId(), booking.getId(), payment.getAmount().toString());
+
+        return ResponseEntity.ok(ApiResponse.success(mapToResponse(payment),
+                "Xác nhận thanh toán thành công. Tour đã được xác nhận."));
+    }
+
     @PostMapping("/momo/notify")
     @Operation(summary = "MoMo payment callback", description = "Webhook callback từ MoMo sau khi thanh toán")
+    @Transactional
     public ResponseEntity<String> momoNotify(@RequestBody Map<String, Object> requestBody) {
         try {
             String partnerRefId = (String) requestBody.get("partnerRefId");
@@ -141,6 +211,11 @@ public class PaymentController {
                 Payment payment = paymentService.findByTransactionId(partnerRefId)
                         .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Payment không tồn tại"));
                 
+                // Idempotency: đã thanh toán rồi thì không xử lý lại
+                if (payment.getStatus() == PaymentStatus.PAID) {
+                    return ResponseEntity.ok("OK");
+                }
+                
                 if ("0".equals(status) || "success".equalsIgnoreCase(status)) {
                     payment.setStatus(PaymentStatus.PAID);
                     payment.setPaidAt(LocalDateTime.now());
@@ -150,8 +225,10 @@ public class PaymentController {
                     
                     Booking booking = payment.getBooking();
                     booking.setPaymentStatus(PaymentStatus.PAID);
+                    booking.setPaidAt(LocalDateTime.now());
                     booking.setStatus(swd.coiviet.enums.BookingStatus.CONFIRMED);
                     bookingService.save(booking);
+                    bookingService.incrementTourTotalBookings(booking);
                     
                     // Send notification
                     notificationService.createPaymentSuccessNotification(
@@ -173,15 +250,41 @@ public class PaymentController {
 
     @GetMapping("/momo/return")
     @Operation(summary = "MoMo payment return", description = "Redirect URL sau khi thanh toán MoMo")
+    @Transactional
     public ResponseEntity<String> momoReturn(@RequestParam Map<String, String> params) {
-        // Handle return from MoMo
-        String partnerRefId = params.get("partnerRefId");
-        String status = params.get("status");
+        // MoMo return URL dùng orderId (không phải partnerRefId) và resultCode (không phải status)
+        String orderId = params.get("orderId");
+        String resultCode = params.get("resultCode");
         
-        Payment payment = paymentService.findByTransactionId(partnerRefId)
-                .orElse(null);
+        if (orderId == null) {
+            return ResponseEntity.ok("Thanh toán thất bại hoặc đã bị hủy.");
+        }
         
-        if (payment != null && "0".equals(status)) {
+        Payment payment = paymentService.findByTransactionId(orderId).orElse(null);
+        if (payment == null) {
+            return ResponseEntity.ok("Thanh toán thất bại hoặc đã bị hủy.");
+        }
+        
+        // resultCode=0 nghĩa là thanh toán thành công
+        if ("0".equals(resultCode)) {
+            // Idempotency: đã thanh toán rồi thì không xử lý lại
+            if (payment.getStatus() != PaymentStatus.PAID) {
+                payment.setStatus(PaymentStatus.PAID);
+                payment.setPaidAt(LocalDateTime.now());
+                payment.setGatewayTransactionId(params.get("transId"));
+                payment.setGatewayResponse(params.toString());
+                payment = paymentService.save(payment);
+                
+                Booking booking = payment.getBooking();
+                booking.setPaymentStatus(PaymentStatus.PAID);
+                booking.setPaidAt(LocalDateTime.now());
+                booking.setStatus(swd.coiviet.enums.BookingStatus.CONFIRMED);
+                bookingService.save(booking);
+                bookingService.incrementTourTotalBookings(booking);
+                
+                notificationService.createPaymentSuccessNotification(
+                        booking.getUser().getId(), booking.getId(), payment.getAmount().toString());
+            }
             return ResponseEntity.ok("Thanh toán thành công! Mã booking: " + payment.getBooking().getBookingCode());
         }
         
@@ -200,6 +303,12 @@ public class PaymentController {
                 Payment payment = paymentService.findByTransactionId(vnp_TxnRef)
                         .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Payment không tồn tại"));
                 
+                // Idempotency: đã thanh toán rồi thì không xử lý lại
+                if (payment.getStatus() == PaymentStatus.PAID) {
+                    Booking b = payment.getBooking();
+                    return ResponseEntity.ok("Thanh toán thành công! Mã booking: " + b.getBookingCode());
+                }
+                
                 if ("00".equals(vnp_ResponseCode)) {
                     payment.setStatus(PaymentStatus.PAID);
                     payment.setPaidAt(LocalDateTime.now());
@@ -209,8 +318,10 @@ public class PaymentController {
                     
                     Booking booking = payment.getBooking();
                     booking.setPaymentStatus(PaymentStatus.PAID);
+                    booking.setPaidAt(LocalDateTime.now());
                     booking.setStatus(swd.coiviet.enums.BookingStatus.CONFIRMED);
                     bookingService.save(booking);
+                    bookingService.incrementTourTotalBookings(booking);
                     
                     // Send notification
                     notificationService.createPaymentSuccessNotification(
@@ -227,7 +338,7 @@ public class PaymentController {
             
             return ResponseEntity.badRequest().body("Invalid signature");
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Thanh toán thất bại hoặc đã bị hủy.");
         }
     }
 
@@ -281,6 +392,23 @@ public class PaymentController {
             return Long.valueOf(userId);
         } catch (Exception e) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Token không hợp lệ: " + e.getMessage());
+        }
+    }
+
+    private String getCurrentUserRole(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
+        }
+        String token = authHeader.substring(7);
+        try {
+            if (!jwtUtil.validateToken(token)) {
+                return null;
+            }
+            String role = jwtUtil.getRoleFromToken(token);
+            return role != null ? role : Role.CUSTOMER.name();
+        } catch (Exception e) {
+            return Role.CUSTOMER.name();
         }
     }
 }

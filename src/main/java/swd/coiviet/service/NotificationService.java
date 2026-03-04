@@ -20,6 +20,7 @@ public interface NotificationService {
     Notification createBookingConfirmationNotification(Long userId, Long bookingId, String bookingCode);
     Notification createBookingCancellationNotification(Long userId, Long bookingId, String bookingCode);
     Notification createPaymentSuccessNotification(Long userId, Long bookingId, String amount);
+    Notification createCashPendingNotification(Long userId, Long bookingId);
     Notification createTourLowBookingNotification(Long userId, Long tourScheduleId, String tourTitle);
     Notification createTourCancellationNotification(Long userId, Long tourScheduleId, String tourTitle);
     Notification createTourSurchargeNotification(Long userId, Long tourScheduleId, String tourTitle, String surchargeAmount);

@@ -82,6 +82,11 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    public List<Booking> findAll() {
+        return bookingRepo.findAll();
+    }
+
+    @Override
     public List<Booking> findByUserId(Long userId) {
         return bookingRepo.findByUserId(userId);
     }
@@ -163,12 +168,17 @@ public class BookingServiceImpl implements BookingService {
         BigDecimal cancellationFee = calculateCancellationFee(booking);
         BigDecimal refundAmount = booking.getFinalAmount().subtract(cancellationFee);
 
+        boolean wasConfirmed = booking.getStatus() == BookingStatus.CONFIRMED;
         booking.setStatus(BookingStatus.CANCELLED);
         booking.setCancelledAt(LocalDateTime.now());
         booking.setCancellationFee(cancellationFee);
         booking.setRefundAmount(refundAmount);
         booking.setUpdatedAt(LocalDateTime.now());
         booking = bookingRepo.save(booking);
+
+        if (wasConfirmed) {
+            decrementTourTotalBookings(booking);
+        }
 
         List<Payment> payments = paymentService.findByBookingId(bookingId);
         for (Payment payment : payments) {
@@ -229,10 +239,16 @@ public class BookingServiceImpl implements BookingService {
         }
 
         // Calculate price
-        BigDecimal basePrice = schedule.getCurrentPrice() != null 
-                ? schedule.getCurrentPrice() 
+        BigDecimal basePrice = schedule.getCurrentPrice() != null
+                ? schedule.getCurrentPrice()
                 : tour.getPrice();
-        BigDecimal totalAmount = basePrice.multiply(BigDecimal.valueOf(request.getNumParticipants()));
+        // Áp dụng discountPercent của schedule nếu có cả currentPrice và discountPercent
+        BigDecimal unitPrice = basePrice;
+        if (schedule.getCurrentPrice() != null && schedule.getDiscountPercent() != null && schedule.getDiscountPercent() > 0) {
+            unitPrice = basePrice.multiply(BigDecimal.valueOf(100).subtract(BigDecimal.valueOf(schedule.getDiscountPercent())))
+                    .divide(BigDecimal.valueOf(100));
+        }
+        BigDecimal totalAmount = unitPrice.multiply(BigDecimal.valueOf(request.getNumParticipants()));
         BigDecimal discountAmount = BigDecimal.ZERO;
         BigDecimal finalAmount = totalAmount;
 
@@ -355,12 +371,17 @@ public class BookingServiceImpl implements BookingService {
         BigDecimal refundAmount = booking.getFinalAmount().subtract(cancellationFee);
 
         // Update booking
+        boolean wasConfirmed = booking.getStatus() == BookingStatus.CONFIRMED;
         booking.setStatus(BookingStatus.CANCELLED);
         booking.setCancelledAt(LocalDateTime.now());
         booking.setCancellationFee(cancellationFee);
         booking.setRefundAmount(refundAmount);
         booking.setUpdatedAt(LocalDateTime.now());
         booking = bookingRepo.save(booking);
+
+        if (wasConfirmed) {
+            decrementTourTotalBookings(booking);
+        }
 
         // Update payment status
         List<Payment> payments = paymentService.findByBookingId(bookingId);
@@ -424,6 +445,24 @@ public class BookingServiceImpl implements BookingService {
         }
 
         return booking.getFinalAmount().multiply(feePercent).divide(BigDecimal.valueOf(100));
+    }
+
+    @Override
+    public void incrementTourTotalBookings(Booking booking) {
+        if (booking.getTour() == null) return;
+        Tour tour = booking.getTour();
+        int current = tour.getTotalBookings() != null ? tour.getTotalBookings() : 0;
+        tour.setTotalBookings(current + 1);
+        tourService.save(tour);
+    }
+
+    @Override
+    public void decrementTourTotalBookings(Booking booking) {
+        if (booking.getTour() == null) return;
+        Tour tour = booking.getTour();
+        int current = tour.getTotalBookings() != null ? tour.getTotalBookings() : 0;
+        tour.setTotalBookings(Math.max(0, current - 1));
+        tourService.save(tour);
     }
 
     private BookingResponse mapToResponse(Booking booking) {

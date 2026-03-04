@@ -55,7 +55,6 @@ public class TourServiceImpl implements TourService {
                     .orElse(0.0);
             
             tour.setAverageRating(BigDecimal.valueOf(avgRating).setScale(2, RoundingMode.HALF_UP));
-            tour.setTotalBookings(reviews.size());
             save(tour);
         }
     }

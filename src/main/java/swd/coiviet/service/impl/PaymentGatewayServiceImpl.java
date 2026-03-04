@@ -127,9 +127,9 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
             vnp_Params.put("vnp_ReturnUrl", returnUrl);
             vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
             
-            Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+            Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
             SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-            formatter.setTimeZone(TimeZone.getTimeZone("Etc/GMT+7"));
+            formatter.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
             String vnp_CreateDate = formatter.format(cld.getTime());
             vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
             
@@ -146,12 +146,13 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
                 String fieldName = itr.next();
                 String fieldValue = vnp_Params.get(fieldName);
                 if ((fieldValue != null) && (fieldValue.length() > 0)) {
+                    String encodedValue = java.net.URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII);
                     hashData.append(fieldName);
                     hashData.append('=');
-                    hashData.append(fieldValue);
+                    hashData.append(encodedValue);
                     query.append(fieldName);
                     query.append('=');
-                    query.append(java.net.URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
+                    query.append(encodedValue);
                     if (itr.hasNext()) {
                         query.append('&');
                         hashData.append('&');
@@ -185,23 +186,24 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
             return false;
         }
         
-        params.remove("vnp_SecureHash");
-        params.remove("vnp_SecureHashType");
+        Map<String, String> paramsCopy = new HashMap<>(params);
+        paramsCopy.remove("vnp_SecureHash");
+        paramsCopy.remove("vnp_SecureHashType");
         
-        List<String> fieldNames = new ArrayList<>(params.keySet());
+        List<String> fieldNames = new ArrayList<>(paramsCopy.keySet());
         Collections.sort(fieldNames);
         StringBuilder hashData = new StringBuilder();
-        for (String fieldName : fieldNames) {
-            String fieldValue = params.get(fieldName);
+        for (int i = 0; i < fieldNames.size(); i++) {
+            String fieldName = fieldNames.get(i);
+            String fieldValue = paramsCopy.get(fieldName);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                hashData.append(fieldName);
+                if (hashData.length() > 0) {
+                    hashData.append('&');
+                }
+                hashData.append(java.net.URLEncoder.encode(fieldName, StandardCharsets.US_ASCII));
                 hashData.append('=');
-                hashData.append(fieldValue);
-                hashData.append('&');
+                hashData.append(java.net.URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
             }
-        }
-        if (hashData.length() > 0) {
-            hashData.setLength(hashData.length() - 1);
         }
         
         String vnp_SecureHashCalculated = VnPayConfiguration.hmacSHA512(

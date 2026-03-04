@@ -304,6 +304,9 @@ public class ArtisanSelfController {
         if (tour.getArtisan() == null || !tour.getArtisan().getId().equals(artisan.getId())) {
             throw new AppException(ErrorCode.FORBIDDEN, "Tour không thuộc về bạn");
         }
+        tourScheduleService.findByTourIdAndTourDateAndStartTime(tourId, tourDate, startTime).ifPresent(s -> {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Đã tồn tại lịch trình cho tour này vào ngày và giờ đã chọn");
+        });
         TourSchedule schedule = TourSchedule.builder()
                 .tour(tour)
                 .tourDate(tourDate)
