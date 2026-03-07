@@ -102,6 +102,8 @@ jwt:
 app:
   oauth2:
     redirect-success: ${OAUTH2_REDIRECT_SUCCESS:http://localhost:3000/oauth2/callback}
+  payment:
+    success-redirect-url: ${PAYMENT_SUCCESS_REDIRECT_URL:https://exe-project-two.vercel.app}
 
 initial:
   admin:

@@ -1,6 +1,5 @@
 package swd.coiviet.repository;
 
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,7 +16,9 @@ public interface LearnModuleRepository extends JpaRepository<LearnModule, Long> 
     List<LearnModule> findByCategoryIdAndStatusOrderByOrderIndexAsc(Long categoryId, LearnModuleStatus status);
     Optional<LearnModule> findBySlug(String slug);
 
-    @EntityGraph(attributePaths = {"quiz", "quiz.questions", "suggestedTours", "suggestedTours.province"})
-    @Query("SELECT m FROM LearnModule m WHERE m.id = :id")
-    Optional<LearnModule> findWithQuizAndToursById(@Param("id") Long id);
+    @Query("SELECT DISTINCT m FROM LearnModule m LEFT JOIN FETCH m.quiz q LEFT JOIN FETCH q.questions WHERE m.id = :id")
+    Optional<LearnModule> findWithQuizById(@Param("id") Long id);
+
+    @Query("SELECT DISTINCT m FROM LearnModule m LEFT JOIN FETCH m.suggestedTours t LEFT JOIN FETCH t.province WHERE m.id = :id")
+    Optional<LearnModule> findWithToursById(@Param("id") Long id);
 }

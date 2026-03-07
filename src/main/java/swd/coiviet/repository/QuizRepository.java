@@ -1,6 +1,5 @@
 package swd.coiviet.repository;
 
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,7 +12,6 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
     Optional<Quiz> findByModuleId(Long moduleId);
     Optional<Quiz> findByModuleIdAndStatus(Long moduleId, PublicationStatus status);
 
-    @EntityGraph(attributePaths = {"questions", "questions.options"})
-    @Query("SELECT q FROM Quiz q WHERE q.id = :id")
+    @Query("SELECT DISTINCT q FROM Quiz q LEFT JOIN FETCH q.questions WHERE q.id = :id")
     Optional<Quiz> findWithQuestionsById(@Param("id") Long id);
 }

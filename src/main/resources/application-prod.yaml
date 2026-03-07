@@ -92,6 +92,8 @@ jwt:
 app:
   oauth2:
     redirect-success: ${OAUTH2_REDIRECT_SUCCESS}
+  payment:
+    success-redirect-url: ${PAYMENT_SUCCESS_REDIRECT_URL:https://exe-project-two.vercel.app}
 
 initial:
   admin:

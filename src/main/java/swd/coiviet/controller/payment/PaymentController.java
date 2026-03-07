@@ -2,11 +2,14 @@ package swd.coiviet.controller.payment;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 import swd.coiviet.configuration.JwtUtil;
 import swd.coiviet.configuration.VnPayConfiguration;
 import swd.coiviet.dto.request.CreatePaymentRequest;
@@ -25,6 +28,7 @@ import swd.coiviet.service.NotificationService;
 import swd.coiviet.service.PaymentGatewayService;
 import swd.coiviet.service.PaymentService;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
@@ -39,6 +43,9 @@ public class PaymentController {
     private final NotificationService notificationService;
     private final ArtisanService artisanService;
     private final JwtUtil jwtUtil;
+
+    @Value("${app.payment.success-redirect-url:https://exe-project-two.vercel.app}")
+    private String paymentSuccessRedirectUrl;
 
     public PaymentController(PaymentService paymentService, PaymentGatewayService paymentGatewayService,
                             BookingService bookingService, NotificationService notificationService,
@@ -251,7 +258,7 @@ public class PaymentController {
     @GetMapping("/momo/return")
     @Operation(summary = "MoMo payment return", description = "Redirect URL sau khi thanh toán MoMo")
     @Transactional
-    public ResponseEntity<String> momoReturn(@RequestParam Map<String, String> params) {
+    public ResponseEntity<?> momoReturn(@RequestParam Map<String, String> params) {
         // MoMo return URL dùng orderId (không phải partnerRefId) và resultCode (không phải status)
         String orderId = params.get("orderId");
         String resultCode = params.get("resultCode");
@@ -285,7 +292,7 @@ public class PaymentController {
                 notificationService.createPaymentSuccessNotification(
                         booking.getUser().getId(), booking.getId(), payment.getAmount().toString());
             }
-            return ResponseEntity.ok("Thanh toán thành công! Mã booking: " + payment.getBooking().getBookingCode());
+            return redirectToETicket(payment.getBooking());
         }
         
         return ResponseEntity.ok("Thanh toán thất bại hoặc đã bị hủy.");
@@ -294,7 +301,7 @@ public class PaymentController {
     @GetMapping("/vnpay/return")
     @Operation(summary = "VNPay payment return", description = "Redirect URL sau khi thanh toán VNPay")
     @Transactional
-    public ResponseEntity<String> vnpayReturn(@RequestParam Map<String, String> params) {
+    public ResponseEntity<?> vnpayReturn(@RequestParam Map<String, String> params) {
         try {
             if (paymentGatewayService.verifyVnPayCallback(params)) {
                 String vnp_TxnRef = params.get("vnp_TxnRef");
@@ -305,8 +312,7 @@ public class PaymentController {
                 
                 // Idempotency: đã thanh toán rồi thì không xử lý lại
                 if (payment.getStatus() == PaymentStatus.PAID) {
-                    Booking b = payment.getBooking();
-                    return ResponseEntity.ok("Thanh toán thành công! Mã booking: " + b.getBookingCode());
+                    return redirectToETicket(payment.getBooking());
                 }
                 
                 if ("00".equals(vnp_ResponseCode)) {
@@ -327,7 +333,7 @@ public class PaymentController {
                     notificationService.createPaymentSuccessNotification(
                             booking.getUser().getId(), booking.getId(), payment.getAmount().toString());
                     
-                    return ResponseEntity.ok("Thanh toán thành công! Mã booking: " + booking.getBookingCode());
+                    return redirectToETicket(booking);
                 } else {
                     payment.setStatus(PaymentStatus.FAILED);
                     payment.setGatewayResponse(params.toString());
@@ -340,6 +346,18 @@ public class PaymentController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Thanh toán thất bại hoặc đã bị hủy.");
         }
+    }
+
+    private ResponseEntity<Void> redirectToETicket(Booking booking) {
+        String baseUrl = paymentSuccessRedirectUrl.endsWith("/") 
+                ? paymentSuccessRedirectUrl.substring(0, paymentSuccessRedirectUrl.length() - 1) 
+                : paymentSuccessRedirectUrl;
+        Long tourId = (booking.getTour() != null) ? booking.getTour().getId() : 0L;
+        String eTicketUrl = UriComponentsBuilder.fromUriString(baseUrl + "/tours/" + tourId + "/booking/e-ticket")
+                .queryParam("bookingCode", booking.getBookingCode())
+                .build()
+                .toUriString();
+        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(eTicketUrl)).build();
     }
 
     private PaymentResponse mapToResponse(Payment payment) {

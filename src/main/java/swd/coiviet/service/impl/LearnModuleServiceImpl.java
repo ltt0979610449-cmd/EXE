@@ -29,7 +29,12 @@ public class LearnModuleServiceImpl implements LearnModuleService {
 
     @Override
     public Optional<LearnModule> findByIdWithRelations(Long id) {
-        return repo.findWithQuizAndToursById(id);
+        Optional<LearnModule> moduleWithQuiz = repo.findWithQuizById(id);
+        if (moduleWithQuiz.isEmpty()) return Optional.empty();
+
+        LearnModule module = moduleWithQuiz.get();
+        repo.findWithToursById(id).ifPresent(m -> module.setSuggestedTours(m.getSuggestedTours()));
+        return Optional.of(module);
     }
 
     @Override

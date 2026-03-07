@@ -1,6 +1,7 @@
 package swd.coiviet.controller.learn;
 
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import swd.coiviet.dto.request.AddQuizQuestionBulkRequest;
 import swd.coiviet.dto.request.AddQuizQuestionRequest;
 import swd.coiviet.dto.response.*;
 import swd.coiviet.enums.LearnDifficulty;
@@ -433,6 +435,18 @@ public class LearnStaffController {
             @RequestBody AddQuizQuestionRequest req) {
         QuizQuestion q = quizService.addQuestion(quizId, req);
         return ResponseEntity.ok(ApiResponse.success(toQuizQuestionResponse(q), "Thêm câu hỏi thành công"));
+    }
+
+    @PostMapping("/quizzes/{quizId}/questions/bulk")
+    @Operation(summary = "Thêm nhiều câu hỏi vào quiz (bulk)")
+    public ResponseEntity<ApiResponse<List<QuizQuestionResponse>>> addQuizQuestionsBulk(
+            @PathVariable Long quizId,
+            @RequestBody @Valid AddQuizQuestionBulkRequest req) {
+        List<QuizQuestion> added = quizService.addQuestionsBulk(quizId, req);
+        List<QuizQuestionResponse> responses = added.stream()
+                .map(this::toQuizQuestionResponse)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.success(responses, "Đã thêm " + added.size() + " câu hỏi thành công"));
     }
 
     @DeleteMapping("/quizzes/{id}")

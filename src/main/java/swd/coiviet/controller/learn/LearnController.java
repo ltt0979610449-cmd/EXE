@@ -62,6 +62,7 @@ public class LearnController {
 
     @GetMapping("/public/modules/{id}")
     @Operation(summary = "Chi tiết module")
+    @Transactional(readOnly = true)
     public ResponseEntity<swd.coiviet.dto.response.ApiResponse<LearnModuleResponse>> getModuleById(@PathVariable Long id) {
         LearnModule module = moduleService.findByIdWithRelations(id)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Module không tồn tại"));
