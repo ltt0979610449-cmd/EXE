@@ -174,17 +174,17 @@ MAIL_PASSWORD=<your-app-password>
 MOMO_PARTNER_CODE=<your-partner-code>
 MOMO_ACCESS_KEY=<your-access-key>
 MOMO_SECRET_KEY=<your-secret-key>
-MOMO_REDIRECT_URL=https://coiviet-api.onrender.com/api/public/payment/momo-return
-MOMO_NOTIFY_URL=https://coiviet-api.onrender.com/api/public/payment/momo-notify
+MOMO_REDIRECT_URL=https://exe-1-k8ma.onrender.com/api/public/payment/momo-return
+MOMO_NOTIFY_URL=https://exe-1-k8ma.onrender.com/api/public/payment/momo-notify
 ```
 
-**Lưu ý**: Thay `coiviet-api.onrender.com` bằng URL thực tế sau khi deploy.
+**Lưu ý**: Thay `exe-1-k8ma.onrender.com` bằng URL thực tế sau khi deploy.
 
 ### Google OAuth2
 ```
 GOOGLE_CLIENT_ID=<your-client-id>
 GOOGLE_CLIENT_SECRET=<your-client-secret>
-GOOGLE_REDIRECT_URI=https://coiviet-api.onrender.com/login/oauth2/code/google
+GOOGLE_REDIRECT_URI=https://exe-1-k8ma.onrender.com/login/oauth2/code/google
 OAUTH2_REDIRECT_SUCCESS=https://your-frontend-domain.com/oauth2/callback
 ```
 
@@ -193,7 +193,7 @@ OAUTH2_REDIRECT_SUCCESS=https://your-frontend-domain.com/oauth2/callback
 2. APIs & Services → Credentials
 3. Chỉnh sửa OAuth 2.0 Client
 4. Thêm vào "Authorized redirect URIs":
-   - `https://coiviet-api.onrender.com/login/oauth2/code/google`
+   - `https://exe-1-k8ma.onrender.com/login/oauth2/code/google`
 
 ### Admin
 ```
@@ -229,11 +229,11 @@ INITIAL_ADMIN_PASSWORD=<secure-password>
    - Đảm bảo build thành công
 
 2. **Kiểm tra Health Check:**
-   - URL: `https://coiviet-api.onrender.com/actuator/health`
+   - URL: `https://exe-1-k8ma.onrender.com/actuator/health`
    - Phải trả về `{"status":"UP"}`
 
 3. **Test API Endpoints:**
-   - Swagger UI: `https://coiviet-api.onrender.com/swagger-ui.html`
+   - Swagger UI: `https://exe-1-k8ma.onrender.com/swagger-ui.html`
    - Test các endpoints chính
 
 4. **Kiểm tra Database Connection:**

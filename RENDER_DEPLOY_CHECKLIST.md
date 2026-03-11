@@ -179,13 +179,13 @@ Value: at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa
 
 ```
 Key: MOMO_REDIRECT_URL
-Value: https://coiviet-api.onrender.com/api/public/payment/momo-return
+Value: https://exe-1-k8ma.onrender.com/api/public/payment/momo-return
 ```
 **Note:** Update this after you get the actual URL
 
 ```
 Key: MOMO_NOTIFY_URL
-Value: https://coiviet-api.onrender.com/api/public/payment/momo-notify
+Value: https://exe-1-k8ma.onrender.com/api/public/payment/momo-notify
 ```
 **Note:** Update this after you get the actual URL
 
@@ -202,7 +202,7 @@ Value: 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
 
 ```
 Key: GOOGLE_REDIRECT_URI
-Value: https://coiviet-api.onrender.com/login/oauth2/code/google
+Value: https://exe-1-k8ma.onrender.com/login/oauth2/code/google
 ```
 **Note:** Update this after you get the actual URL, and add to Google Console
 
@@ -234,11 +234,11 @@ Value: admin123
    - No database connection errors
 
 2. **Check Health Endpoint:**
-   - URL: `https://coiviet-api.onrender.com/actuator/health`
+   - URL: `https://exe-1-k8ma.onrender.com/actuator/health`
    - Should return: `{"status":"UP"}`
 
 3. **Check Swagger UI:**
-   - URL: `https://coiviet-api.onrender.com/swagger-ui.html`
+   - URL: `https://exe-1-k8ma.onrender.com/swagger-ui.html`
    - Should load successfully
 
 4. **Test API Endpoints:**
@@ -248,7 +248,7 @@ Value: admin123
 
 1. **Get your production URL:**
    - In Render Dashboard → Web Service
-   - You'll see: `https://coiviet-api.onrender.com` (or similar)
+   - You'll see: `https://exe-1-k8ma.onrender.com` (or similar)
 
 2. **Update MoMo URLs:**
    - In Render Dashboard → Environment
@@ -261,7 +261,7 @@ Value: admin123
    - APIs & Services → Credentials
    - Edit OAuth 2.0 Client
    - Add to "Authorized redirect URIs":
-     - `https://coiviet-api.onrender.com/login/oauth2/code/google`
+     - `https://exe-1-k8ma.onrender.com/login/oauth2/code/google`
    - Save changes
 
 4. **Redeploy** (if needed):
@@ -312,4 +312,4 @@ Value: admin123
 
 Once all checks pass, your application is live on Render!
 
-**Your API URL:** `https://coiviet-api.onrender.com`
+**Your API URL:** `https://exe-1-k8ma.onrender.com`

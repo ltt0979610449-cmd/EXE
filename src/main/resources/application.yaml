@@ -82,7 +82,7 @@ spring:
             scope:
               - email
               - profile
-            redirect-uri: ${GOOGLE_REDIRECT_URI}
+            redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/login/oauth2/code/google}
         provider:
           google:
             authorization-uri: https://accounts.google.com/o/oauth2/v2/auth

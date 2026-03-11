@@ -41,15 +41,15 @@ Write-Host "# MoMo Payment Configuration" -ForegroundColor Green
 Write-Host "MOMO_PARTNER_CODE=MOMOBKUN20180529"
 Write-Host "MOMO_ACCESS_KEY=klm05TvNBzhg7h7j"
 Write-Host "MOMO_SECRET_KEY=at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa"
-Write-Host "MOMO_REDIRECT_URL=https://coiviet-api.onrender.com/api/public/payment/momo-return"
-Write-Host "MOMO_NOTIFY_URL=https://coiviet-api.onrender.com/api/public/payment/momo-notify"
+Write-Host "MOMO_REDIRECT_URL=https://exe-1-k8ma.onrender.com/api/public/payment/momo-return"
+Write-Host "MOMO_NOTIFY_URL=https://exe-1-k8ma.onrender.com/api/public/payment/momo-notify"
 Write-Host ""
 
 # Google OAuth2
 Write-Host "# Google OAuth2 Configuration" -ForegroundColor Green
 Write-Host "GOOGLE_CLIENT_ID=87846938671-76pcjrb3ucf7ngmkai7b2qni7uvrn9qt.apps.googleusercontent.com"
 Write-Host "GOOGLE_CLIENT_SECRET=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"
-Write-Host "GOOGLE_REDIRECT_URI=https://coiviet-api.onrender.com/login/oauth2/code/google"
+Write-Host "GOOGLE_REDIRECT_URI=https://exe-1-k8ma.onrender.com/login/oauth2/code/google"
 Write-Host "OAUTH2_REDIRECT_SUCCESS=https://your-frontend-domain.com/oauth2/callback"
 Write-Host ""
 
@@ -60,7 +60,7 @@ Write-Host ""
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "Lưu ý:" -ForegroundColor Yellow
-Write-Host "1. Thay 'coiviet-api.onrender.com' bằng URL thực tế sau khi deploy" -ForegroundColor White
+Write-Host "1. Thay 'exe-1-k8ma.onrender.com' bằng URL thực tế sau khi deploy" -ForegroundColor White
 Write-Host "2. Update Google OAuth2 redirect URI trong Google Cloud Console" -ForegroundColor White
 Write-Host "3. Update MoMo URLs trong MoMo dashboard" -ForegroundColor White
 Write-Host "========================================" -ForegroundColor Cyan

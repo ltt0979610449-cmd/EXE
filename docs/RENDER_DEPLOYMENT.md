@@ -144,29 +144,29 @@ MAIL_PASSWORD=your_app_password
 MOMO_PARTNER_CODE=your_momo_partner_code
 MOMO_ACCESS_KEY=your_momo_access_key
 MOMO_SECRET_KEY=your_momo_secret_key
-MOMO_REDIRECT_URL=https://coiviet-api.onrender.com/api/public/payment/momo-return
-MOMO_NOTIFY_URL=https://coiviet-api.onrender.com/api/public/payment/momo-notify
+MOMO_REDIRECT_URL=https://exe-1-k8ma.onrender.com/api/public/payment/momo-return
+MOMO_NOTIFY_URL=https://exe-1-k8ma.onrender.com/api/public/payment/momo-notify
 ```
 
 **Lưu ý**: 
-- Thay `coiviet-api.onrender.com` bằng URL thực tế của bạn trên Render
+- Thay `exe-1-k8ma.onrender.com` bằng URL thực tế của bạn trên Render
 - Cần update các URL này trong MoMo dashboard
 
 #### Google OAuth2 Configuration
 ```
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_REDIRECT_URI=https://coiviet-api.onrender.com/login/oauth2/code/google
+GOOGLE_REDIRECT_URI=https://exe-1-k8ma.onrender.com/login/oauth2/code/google
 OAUTH2_REDIRECT_SUCCESS=https://your-frontend-domain.com/oauth2/callback
 ```
 
 **Lưu ý**:
-- Thay `coiviet-api.onrender.com` bằng URL thực tế của bạn
+- Thay `exe-1-k8ma.onrender.com` bằng URL thực tế của bạn
 - Cần thêm redirect URI vào Google Cloud Console:
   - Vào [Google Cloud Console](https://console.cloud.google.com)
   - APIs & Services → Credentials
   - Chỉnh sửa OAuth 2.0 Client
-  - Thêm `https://coiviet-api.onrender.com/login/oauth2/code/google` vào Authorized redirect URIs
+  - Thêm `https://exe-1-k8ma.onrender.com/login/oauth2/code/google` vào Authorized redirect URIs
 
 #### Admin Configuration
 ```
@@ -199,7 +199,7 @@ INITIAL_ADMIN_PASSWORD=your_secure_admin_password
 ## Bước 6: Verify Deployment
 
 1. Kiểm tra logs trong Render Dashboard
-2. Test health endpoint: `https://coiviet-api.onrender.com/actuator/health`
+2. Test health endpoint: `https://exe-1-k8ma.onrender.com/actuator/health`
 3. Test API endpoints
 4. Kiểm tra database connection
 

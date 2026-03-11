@@ -140,15 +140,15 @@ MAIL_PASSWORD=zhvr axud xxnb jihr
 MOMO_PARTNER_CODE=MOMOBKUN20180529
 MOMO_ACCESS_KEY=klm05TvNBzhg7h7j
 MOMO_SECRET_KEY=at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa
-MOMO_REDIRECT_URL=https://coiviet-api.onrender.com/api/public/payment/momo-return
-MOMO_NOTIFY_URL=https://coiviet-api.onrender.com/api/public/payment/momo-notify
+MOMO_REDIRECT_URL=https://exe-1-k8ma.onrender.com/api/public/payment/momo-return
+MOMO_NOTIFY_URL=https://exe-1-k8ma.onrender.com/api/public/payment/momo-notify
 ```
 
 **Google OAuth2:**
 ```
 GOOGLE_CLIENT_ID=87846938671-76pcjrb3ucf7ngmkai7b2qni7uvrn9qt.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=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
-GOOGLE_REDIRECT_URI=https://coiviet-api.onrender.com/login/oauth2/code/google
+GOOGLE_REDIRECT_URI=https://exe-1-k8ma.onrender.com/login/oauth2/code/google
 OAUTH2_REDIRECT_SUCCESS=https://your-frontend-domain.com/oauth2/callback
 ```
 
@@ -158,7 +158,7 @@ INITIAL_ADMIN_PASSWORD=admin123
 ```
 
 **Lưu ý:** 
-- Thay `coiviet-api.onrender.com` bằng URL thực tế sau khi deploy
+- Thay `exe-1-k8ma.onrender.com` bằng URL thực tế sau khi deploy
 - Update Google OAuth2 redirect URI trong Google Cloud Console
 
 ### Bước 7: Deploy
@@ -174,11 +174,11 @@ INITIAL_ADMIN_PASSWORD=admin123
    - Đảm bảo build thành công
 
 2. **Kiểm tra Health Check:**
-   - URL: `https://coiviet-api.onrender.com/actuator/health`
+   - URL: `https://exe-1-k8ma.onrender.com/actuator/health`
    - Phải trả về `{"status":"UP"}`
 
 3. **Test API Endpoints:**
-   - Swagger UI: `https://coiviet-api.onrender.com/swagger-ui.html`
+   - Swagger UI: `https://exe-1-k8ma.onrender.com/swagger-ui.html`
    - Test các endpoints chính
 
 4. **Update URLs:**
@@ -194,7 +194,7 @@ INITIAL_ADMIN_PASSWORD=admin123
 ## ⚠️ Lưu ý quan trọng
 
 1. **Google OAuth2 Redirect URI:**
-   - Cần thêm `https://coiviet-api.onrender.com/login/oauth2/code/google` vào Google Cloud Console
+   - Cần thêm `https://exe-1-k8ma.onrender.com/login/oauth2/code/google` vào Google Cloud Console
    - Vào: https://console.cloud.google.com → APIs & Services → Credentials
 
 2. **MoMo Payment URLs:**

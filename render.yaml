@@ -88,10 +88,10 @@ services:
         sync: false  # Cần set thủ công
       
       - key: MOMO_REDIRECT_URL
-        sync: false  # Sẽ là: https://coiviet-api.onrender.com/api/public/payment/momo-return
+        sync: false  # Sẽ là: https://exe-1-k8ma.onrender.com/api/public/payment/momo-return
       
       - key: MOMO_NOTIFY_URL
-        sync: false  # Sẽ là: https://coiviet-api.onrender.com/api/public/payment/momo-notify
+        sync: false  # Sẽ là: https://exe-1-k8ma.onrender.com/api/public/payment/momo-notify
       
       # Google OAuth2 Configuration
       - key: GOOGLE_CLIENT_ID
@@ -101,7 +101,7 @@ services:
         sync: false  # Cần set thủ công
       
       - key: GOOGLE_REDIRECT_URI
-        sync: false  # Sẽ là: https://coiviet-api.onrender.com/login/oauth2/code/google
+        sync: false  # Sẽ là: https://exe-1-k8ma.onrender.com/login/oauth2/code/google
       
       - key: OAUTH2_REDIRECT_SUCCESS
         sync: false  # Frontend callback URL

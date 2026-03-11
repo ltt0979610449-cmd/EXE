@@ -104,15 +104,15 @@ MAIL_PASSWORD = zhvr axud xxnb jihr
 MOMO_PARTNER_CODE = MOMOBKUN20180529
 MOMO_ACCESS_KEY = klm05TvNBzhg7h7j
 MOMO_SECRET_KEY = at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa
-MOMO_REDIRECT_URL = https://coiviet-api.onrender.com/api/public/payment/momo-return
-MOMO_NOTIFY_URL = https://coiviet-api.onrender.com/api/public/payment/momo-notify
+MOMO_REDIRECT_URL = https://exe-1-k8ma.onrender.com/api/public/payment/momo-return
+MOMO_NOTIFY_URL = https://exe-1-k8ma.onrender.com/api/public/payment/momo-notify
 ```
 
 ### Google OAuth2
 ```
 GOOGLE_CLIENT_ID = 87846938671-76pcjrb3ucf7ngmkai7b2qni7uvrn9qt.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET = 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
-GOOGLE_REDIRECT_URI = https://coiviet-api.onrender.com/login/oauth2/code/google
+GOOGLE_REDIRECT_URI = https://exe-1-k8ma.onrender.com/login/oauth2/code/google
 OAUTH2_REDIRECT_SUCCESS = https://your-frontend-domain.com/oauth2/callback
 ```
 
@@ -134,14 +134,14 @@ INITIAL_ADMIN_PASSWORD = admin123
 
 1. **Lấy URL production:**
    - Trong Dashboard → Web Service
-   - URL sẽ là: `https://coiviet-api.onrender.com` (hoặc tương tự)
+   - URL sẽ là: `https://exe-1-k8ma.onrender.com` (hoặc tương tự)
 
 2. **Test Health:**
-   - Mở: `https://coiviet-api.onrender.com/actuator/health`
+   - Mở: `https://exe-1-k8ma.onrender.com/actuator/health`
    - Phải trả về: `{"status":"UP"}`
 
 3. **Test Swagger:**
-   - Mở: `https://coiviet-api.onrender.com/swagger-ui.html`
+   - Mở: `https://exe-1-k8ma.onrender.com/swagger-ui.html`
 
 ## Bước 9: Update URLs (Sau khi có URL thực tế)
 
@@ -156,7 +156,7 @@ INITIAL_ADMIN_PASSWORD = admin123
 2. APIs & Services → Credentials
 3. Edit OAuth 2.0 Client
 4. Thêm vào "Authorized redirect URIs":
-   - `https://coiviet-api.onrender.com/login/oauth2/code/google`
+   - `https://exe-1-k8ma.onrender.com/login/oauth2/code/google`
 5. Save
 6. Update `GOOGLE_REDIRECT_URI` trong Render (nếu cần)
 7. Redeploy
@@ -165,7 +165,7 @@ INITIAL_ADMIN_PASSWORD = admin123
 
 Application đã live trên Render!
 
-**URL:** `https://coiviet-api.onrender.com`
+**URL:** `https://exe-1-k8ma.onrender.com`
 
 ## 📚 Tài liệu chi tiết
 
