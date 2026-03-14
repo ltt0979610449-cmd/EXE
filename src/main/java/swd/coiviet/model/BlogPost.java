@@ -35,6 +35,10 @@ public class BlogPost {
     @Column(columnDefinition = "text")
     private String featuredImageUrl;
 
+    /** URL ảnh gallery, phân cách bằng dấu phẩy (giống artisan) */
+    @Column(columnDefinition = "text")
+    private String images;
+
     @Enumerated(EnumType.STRING)
     private PublicationStatus status;
 

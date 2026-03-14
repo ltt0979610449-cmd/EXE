@@ -120,6 +120,11 @@ public class CloudinaryService {
         return uploadImage(file, folder, "blog");
     }
 
+    public List<String> uploadBlogImages(MultipartFile[] files, Long postId) {
+        String folder = String.format("blogs/%d/images", postId == null ? 0 : postId);
+        return uploadMultipleImagesAsync(files, folder, "blog");
+    }
+
     public String uploadTourThumbnail(MultipartFile file, Long tourId) throws IOException {
         String folder = String.format("tours/%d/thumbnail", tourId == null ? 0 : tourId);
         return uploadImage(file, folder, "tour-thumbnail");

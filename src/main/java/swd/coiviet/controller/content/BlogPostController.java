@@ -2,6 +2,7 @@ package swd.coiviet.controller.content;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import swd.coiviet.service.ProvinceService;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -74,7 +76,10 @@ public class BlogPostController {
             @Parameter(description = "ID tỉnh thành", required = false)
             @RequestParam(required = false) Long provinceId,
             @Parameter(description = "Featured image", schema = @Schema(type = "string", format = "binary"))
-            @RequestPart(value = "featuredImage", required = false) MultipartFile featuredImage) {
+            @RequestPart(value = "featuredImage", required = false) MultipartFile featuredImage,
+            @Parameter(description = "Danh sách ảnh gallery (có thể chọn nhiều ảnh)",
+                    array = @ArraySchema(schema = @Schema(type = "string", format = "binary")))
+            @RequestPart(value = "images", required = false) MultipartFile[] images) {
         try {
             boolean contentBlank = isBlank(content);
             boolean blocksBlank = isBlank(blocksJson);
@@ -104,6 +109,20 @@ public class BlogPostController {
                 saved.setFeaturedImageUrl(featuredImageUrl);
                 saved = blogPostService.save(saved);
             }
+
+            // Upload gallery images if provided
+            if (images != null && images.length > 0) {
+                List<MultipartFile> validImages = Arrays.stream(images)
+                        .filter(img -> img != null && !img.isEmpty() && img.getSize() > 0)
+                        .toList();
+                if (!validImages.isEmpty()) {
+                    MultipartFile[] validImagesArray = validImages.toArray(new MultipartFile[0]);
+                    List<String> imageUrls = cloudinaryService.uploadBlogImages(validImagesArray, saved.getId());
+                    String imagesJson = String.join(",", imageUrls);
+                    saved.setImages(imagesJson);
+                    saved = blogPostService.save(saved);
+                }
+            }
             
             return ResponseEntity.ok(ApiResponse.success(saved, "Tạo blog post thành công"));
         } catch (IOException e) {
@@ -126,7 +145,10 @@ public class BlogPostController {
             @Parameter(description = "ID tỉnh thành", required = false)
             @RequestParam(required = false) Long provinceId,
             @Parameter(description = "Featured image mới (nếu có)", schema = @Schema(type = "string", format = "binary"))
-            @RequestPart(value = "featuredImage", required = false) MultipartFile featuredImage) {
+            @RequestPart(value = "featuredImage", required = false) MultipartFile featuredImage,
+            @Parameter(description = "Danh sách ảnh gallery (có thể chọn nhiều ảnh)",
+                    array = @ArraySchema(schema = @Schema(type = "string", format = "binary")))
+            @RequestPart(value = "images", required = false) MultipartFile[] images) {
         BlogPost existing = blogPostService.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Blog post không tồn tại"));
         
@@ -157,6 +179,26 @@ public class BlogPostController {
                 }
                 String featuredImageUrl = cloudinaryService.uploadBlogImage(featuredImage, id);
                 existing.setFeaturedImageUrl(featuredImageUrl);
+            }
+
+            // Handle gallery images
+            if (images != null && images.length > 0) {
+                List<MultipartFile> validImages = Arrays.stream(images)
+                        .filter(img -> img != null && !img.isEmpty() && img.getSize() > 0)
+                        .toList();
+                if (!validImages.isEmpty()) {
+                    if (existing.getImages() != null && !existing.getImages().isEmpty()) {
+                        String[] oldImageUrls = existing.getImages().split(",");
+                        for (String oldUrl : oldImageUrls) {
+                            String publicId = cloudinaryService.extractPublicIdFromUrl(oldUrl.trim());
+                            if (publicId != null) cloudinaryService.deleteResource(publicId);
+                        }
+                    }
+                    MultipartFile[] validImagesArray = validImages.toArray(new MultipartFile[0]);
+                    List<String> imageUrls = cloudinaryService.uploadBlogImages(validImagesArray, id);
+                    String imagesJson = String.join(",", imageUrls);
+                    existing.setImages(imagesJson);
+                }
             }
             
             BlogPost updated = blogPostService.save(existing);
@@ -203,6 +245,14 @@ public class BlogPostController {
             String publicId = cloudinaryService.extractPublicIdFromUrl(post.getFeaturedImageUrl());
             if (publicId != null) {
                 cloudinaryService.deleteResource(publicId);
+            }
+        }
+        // Delete gallery images
+        if (post.getImages() != null && !post.getImages().isEmpty()) {
+            String[] imageUrls = post.getImages().split(",");
+            for (String url : imageUrls) {
+                String publicId = cloudinaryService.extractPublicIdFromUrl(url.trim());
+                if (publicId != null) cloudinaryService.deleteResource(publicId);
             }
         }
         

@@ -234,6 +234,26 @@ public class UploadController {
     }
 
     /**
+     * Upload multiple blog images (gallery)
+     */
+    @PutMapping(value = "/blog/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload blog images", description = "Cập nhật nhiều ảnh blog từ file")
+    public ResponseEntity<ApiResponse<UploadResponse>> uploadBlogImages(
+            @Parameter(description = "Danh sách ảnh", schema = @Schema(type = "array", format = "binary"))
+            @RequestPart("files") MultipartFile[] files,
+            @RequestParam(value = "postId", required = false) Long postId) {
+        if (files == null || files.length == 0) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Vui lòng chọn ít nhất một ảnh");
+        }
+        List<String> urls = cloudinaryService.uploadBlogImages(files, postId);
+        UploadResponse response = UploadResponse.builder()
+                .urls(urls)
+                .message("Upload " + urls.size() + " ảnh thành công")
+                .build();
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    /**
      * Delete image from Cloudinary
      */
     @DeleteMapping("/delete")

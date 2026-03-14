@@ -265,7 +265,7 @@ public class UserLearnProgressServiceImpl implements UserLearnProgressService {
         if (attempt.getVoucherClaimed()) {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Bạn đã nhận voucher rồi");
         }
-        if (attempt.getScorePercent().compareTo(BigDecimal.valueOf(100)) != 0) {
+        if (attempt.getScorePercent() == null || attempt.getScorePercent().compareTo(BigDecimal.valueOf(100)) != 0) {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Chỉ có thể nhận voucher khi đạt 100%");
         }
         Voucher template = attempt.getQuiz().getAchievementVoucher();
@@ -299,7 +299,14 @@ public class UserLearnProgressServiceImpl implements UserLearnProgressService {
         attempt.setVoucherClaimed(true);
         attemptRepo.save(attempt);
 
-        String discountInfo = template.getDiscountValue() != null ? template.getDiscountValue() + "% giảm giá" : "ưu đãi từ quiz Learn";
+        String discountInfo;
+        if (template.getDiscountValue() == null) {
+            discountInfo = "ưu đãi từ quiz Learn";
+        } else if ("PERCENTAGE".equals(template.getDiscountType())) {
+            discountInfo = template.getDiscountValue() + "% giảm giá";
+        } else {
+            discountInfo = template.getDiscountValue() + " VND giảm giá";
+        }
         notificationService.createVoucherNotification(userId, code, discountInfo);
     }
 
