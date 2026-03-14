@@ -57,6 +57,11 @@ public class Booking {
     @Enumerated(EnumType.STRING)
     private BookingStatus status;
 
+    /** Đã gửi email nhắc lịch trước ngày đi (3 ngày) */
+    private LocalDateTime preDepartureEmailSentAt;
+    /** Đã gửi email xin feedback sau tour */
+    private LocalDateTime postTourFeedbackEmailSentAt;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

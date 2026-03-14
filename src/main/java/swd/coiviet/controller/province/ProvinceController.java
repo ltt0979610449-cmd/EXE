@@ -1,6 +1,7 @@
 package swd.coiviet.controller.province;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/provinces")
+@Tag(name = "Province", description = "Tỉnh thành")
 public class ProvinceController {
 
     private final ProvinceService provinceService;

@@ -1,6 +1,7 @@
 package swd.coiviet.controller.content;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -29,6 +30,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/user-memories")
+@Tag(name = "Content", description = "Ký ức người dùng")
 public class UserMemoryController {
 
     private final UserMemoryService userMemoryService;

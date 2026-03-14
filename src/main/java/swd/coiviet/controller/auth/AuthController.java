@@ -1,5 +1,6 @@
 package swd.coiviet.controller.auth;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -16,6 +17,7 @@ import swd.coiviet.service.AuthService;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Auth", description = "Đăng nhập, đăng xuất, quên mật khẩu, OAuth2")
 public class AuthController {
 
     private final AuthService authService;

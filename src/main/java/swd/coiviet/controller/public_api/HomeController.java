@@ -1,6 +1,7 @@
 package swd.coiviet.controller.public_api;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import swd.coiviet.dto.response.ApiResponse;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/public/home")
+@Tag(name = "Public", description = "Trang chủ công khai")
 public class HomeController {
 
     private final ProvinceService provinceService;

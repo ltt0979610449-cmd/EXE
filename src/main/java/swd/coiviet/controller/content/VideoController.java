@@ -1,6 +1,7 @@
 package swd.coiviet.controller.content;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -25,6 +26,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/videos")
+@Tag(name = "Content", description = "Video văn hóa")
 public class VideoController {
 
     private final VideoService videoService;

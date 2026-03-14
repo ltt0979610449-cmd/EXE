@@ -3,21 +3,31 @@ package swd.coiviet.service.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import swd.coiviet.model.EmailLog;
+import swd.coiviet.repository.EmailLogRepository;
 import swd.coiviet.service.EmailService;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class EmailServiceImpl implements EmailService {
     private static final Logger logger = LoggerFactory.getLogger(EmailServiceImpl.class);
-    
+
     @Autowired(required = false)
     private JavaMailSender mailSender;
+
+    @Autowired(required = false)
+    private EmailLogRepository emailLogRepository;
+
+    @Value("${app.api-base-url:http://localhost:8080}")
+    private String apiBaseUrl;
 
     @Override
     public void sendEmail(String to, String subject, String body) {
@@ -200,5 +210,118 @@ public class EmailServiceImpl implements EmailService {
             </html>
             """, otp);
         sendEmail(to, subject, body);
+    }
+
+    @Override
+    public void sendPreDepartureReminder(String to, String bookingCode, String tourTitle, String tourDate, String preparationTips) {
+        String subject = "Nhắc lịch: Tour " + tourTitle + " khởi hành sau 3 ngày - " + bookingCode;
+        String tipsSection = "";
+        if (preparationTips != null && !preparationTips.isBlank()) {
+            tipsSection = String.format("""
+                <h3 style="color: #2c3e50;">Chuẩn bị trước khi đi</h3>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                    %s
+                </div>
+                """, preparationTips.replace("\n", "<br>"));
+        } else {
+            tipsSection = """
+                <p><strong>Lưu ý:</strong> Mang theo trang phục thoải mái, giày dép phù hợp đi bộ, và các vật dụng cá nhân cần thiết.</p>
+                """;
+        }
+        String body = String.format("""
+            <html>
+            <body style="font-family: Arial, sans-serif;">
+                <h2 style="color: #27ae60;">Nhắc lịch tour sắp khởi hành!</h2>
+                <p>Xin chào,</p>
+                <p>Tour <strong>%s</strong> của bạn sẽ khởi hành vào ngày <strong>%s</strong> (còn 3 ngày nữa).</p>
+                <ul>
+                    <li><strong>Mã đặt tour:</strong> %s</li>
+                    <li><strong>Tên tour:</strong> %s</li>
+                    <li><strong>Ngày khởi hành:</strong> %s</li>
+                </ul>
+                %s
+                <p>Chúc bạn có chuyến đi vui vẻ!</p>
+                <p>Trân trọng,<br>Đội ngũ Cội Việt</p>
+            </body>
+            </html>
+            """, tourTitle, tourDate, bookingCode, tourTitle, tourDate, tipsSection);
+        sendEmailWithLog(to, subject, body, "PRE_DEPARTURE_REMINDER", null, "BOOKING");
+    }
+
+    @Override
+    public void sendPostTourFeedbackRequest(String to, String bookingCode, String tourTitle, String feedbackLink) {
+        String subject = "Bạn đánh giá tour " + tourTitle + " như thế nào? - Cội Việt";
+        String linkHtml = feedbackLink != null && !feedbackLink.isBlank()
+                ? String.format("<p><a href=\"%s\" style=\"background: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;\">Đánh giá tour ngay</a></p>", feedbackLink)
+                : "<p>Vui lòng đăng nhập vào ứng dụng Cội Việt để đánh giá tour của bạn.</p>";
+        String body = String.format("""
+            <html>
+            <body style="font-family: Arial, sans-serif;">
+                <h2 style="color: #2c3e50;">Cảm ơn bạn đã tham gia tour!</h2>
+                <p>Xin chào,</p>
+                <p>Cảm ơn bạn đã tham gia tour <strong>%s</strong> (mã: %s).</p>
+                <p>Chúng tôi rất mong nhận được đánh giá của bạn để cải thiện chất lượng dịch vụ.</p>
+                %s
+                <p>Trân trọng,<br>Đội ngũ Cội Việt</p>
+            </body>
+            </html>
+            """, tourTitle, bookingCode, linkHtml);
+        sendEmailWithLog(to, subject, body, "POST_TOUR_FEEDBACK", null, "BOOKING");
+    }
+
+    /**
+     * Gửi email và ghi log, có tracking pixel để theo dõi đã mở.
+     */
+    private void sendEmailWithLog(String to, String subject, String body, String templateType, Long relatedId, String relatedType) {
+        if (mailSender == null) {
+            logger.warn("JavaMailSender not configured, skipping email to: {}", to);
+            return;
+        }
+
+        EmailLog log = null;
+        if (emailLogRepository != null) {
+            log = EmailLog.builder()
+                    .recipientEmail(to)
+                    .subject(subject)
+                    .templateType(templateType)
+                    .relatedId(relatedId)
+                    .relatedType(relatedType)
+                    .status(EmailLog.EmailLogStatus.PENDING)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            log = emailLogRepository.save(log);
+
+            String trackingUrl = apiBaseUrl.replaceAll("/$", "") + "/api/track/email/" + log.getId() + "/open";
+            String pixel = "<img src=\"" + trackingUrl + "\" width=\"1\" height=\"1\" alt=\"\" style=\"display:none\" />";
+            body = body.replace("</body>", pixel + "</body>");
+        }
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(body, true);
+            mailSender.send(message);
+
+            if (log != null) {
+                log.setStatus(EmailLog.EmailLogStatus.SENT);
+                log.setSentAt(LocalDateTime.now());
+                emailLogRepository.save(log);
+            }
+            logger.info("Email sent successfully to: {}", to);
+        } catch (MessagingException e) {
+            logger.error("Failed to send email to {}: {}", to, e.getMessage(), e);
+            if (log != null) {
+                log.setStatus(EmailLog.EmailLogStatus.FAILED);
+                emailLogRepository.save(log);
+            }
+        } catch (Exception e) {
+            logger.error("Unexpected error sending email to {}: {}", to, e.getMessage(), e);
+            if (log != null) {
+                log.setStatus(EmailLog.EmailLogStatus.FAILED);
+                emailLogRepository.save(log);
+            }
+        }
     }
 }

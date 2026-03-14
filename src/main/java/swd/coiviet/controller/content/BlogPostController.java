@@ -1,6 +1,7 @@
 package swd.coiviet.controller.content;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -25,6 +26,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/blog-posts")
+@Tag(name = "Content", description = "Bài viết blog")
 public class BlogPostController {
 
     private final BlogPostService blogPostService;

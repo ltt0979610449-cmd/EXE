@@ -1,6 +1,7 @@
 package swd.coiviet.controller.tour;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -24,6 +25,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tour-schedules")
+@Tag(name = "Tour", description = "Lịch trình tour")
 public class TourScheduleController {
 
     private final TourScheduleService tourScheduleService;

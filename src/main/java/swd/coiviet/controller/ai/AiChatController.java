@@ -1,6 +1,7 @@
 package swd.coiviet.controller.ai;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -16,6 +17,7 @@ import swd.coiviet.service.AiChatService;
 
 @RestController
 @RequestMapping("/api/ai-chat")
+@Tag(name = "AI Chat", description = "Chat với AI tư vấn tour, văn hóa")
 @SecurityRequirement(name = "bearerAuth")
 public class AiChatController {
 

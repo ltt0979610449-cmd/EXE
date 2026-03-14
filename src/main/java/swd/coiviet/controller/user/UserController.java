@@ -1,5 +1,6 @@
 package swd.coiviet.controller.user;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
+@Tag(name = "User", description = "Quản lý tài khoản người dùng, đăng ký")
 public class UserController {
 
     private final UserService userService;

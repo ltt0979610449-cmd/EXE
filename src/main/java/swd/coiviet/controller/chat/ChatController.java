@@ -1,5 +1,6 @@
 package swd.coiviet.controller.chat;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/chats")
+@Tag(name = "Chat", description = "Tin nhắn giữa user và artisan")
 public class ChatController {
     private final ChatService chatService;
 

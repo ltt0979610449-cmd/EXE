@@ -104,6 +104,8 @@ app:
     redirect-success: ${OAUTH2_REDIRECT_SUCCESS:http://localhost:3000/oauth2/callback}
   payment:
     success-redirect-url: ${PAYMENT_SUCCESS_REDIRECT_URL:https://exe-project-two.vercel.app}
+  feedback-base-url: ${APP_FEEDBACK_BASE_URL:https://exe-project-two.vercel.app}
+  api-base-url: ${APP_API_BASE_URL:http://localhost:8080}
 
 initial:
   admin:
@@ -116,6 +118,8 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+    # Mặc định chọn group "default" (hiển thị tất cả API) khi mở Swagger UI
+    urls-primary-name: default
 
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME}

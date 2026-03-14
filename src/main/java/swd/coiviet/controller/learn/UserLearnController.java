@@ -1,6 +1,7 @@
 package swd.coiviet.controller.learn;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/learn")
+@Tag(name = "Learn", description = "Tiến độ học tập của user")
 public class UserLearnController {
 
     private final UserLearnProgressService progressService;

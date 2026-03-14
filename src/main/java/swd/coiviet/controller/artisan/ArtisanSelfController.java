@@ -2,6 +2,7 @@ package swd.coiviet.controller.artisan;
 
 import io.jsonwebtoken.Claims;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -46,6 +47,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/artisans/me")
+@Tag(name = "Artisan", description = "Tự quản lý profile nghệ nhân")
 public class ArtisanSelfController {
 
     private final ArtisanService artisanService;

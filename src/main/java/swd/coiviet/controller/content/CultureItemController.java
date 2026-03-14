@@ -1,6 +1,7 @@
 package swd.coiviet.controller.content;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,6 +28,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/culture-items")
+@Tag(name = "Content", description = "Mục văn hóa")
 public class CultureItemController {
 
     private final CultureItemService cultureItemService;

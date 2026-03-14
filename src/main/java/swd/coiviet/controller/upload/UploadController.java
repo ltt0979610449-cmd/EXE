@@ -1,6 +1,7 @@
 package swd.coiviet.controller.upload;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.http.MediaType;
@@ -18,6 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/upload")
+@Tag(name = "Upload", description = "Upload file (avatar, ảnh, video)")
 public class UploadController {
 
     private final CloudinaryService cloudinaryService;

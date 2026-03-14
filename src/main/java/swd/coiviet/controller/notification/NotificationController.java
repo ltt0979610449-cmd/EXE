@@ -1,6 +1,7 @@
 package swd.coiviet.controller.notification;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/notifications")
+@Tag(name = "Notification", description = "Thông báo người dùng")
 public class NotificationController {
 
     private final NotificationService notificationService;

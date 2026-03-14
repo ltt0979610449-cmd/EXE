@@ -41,9 +41,12 @@ public class SecurityConfig {
                         // Public endpoints
                         .requestMatchers("/api/public/**", "/api/auth/**", "/swagger-ui/**",
                                 "/v3/api-docs/**", "/swagger-ui.html", "/api/v1/shipments/**",
-                                "/oauth2/**", "/login/oauth2/**", "/ws/**").permitAll()
+                                "/oauth2/**", "/login/oauth2/**", "/ws/**",
+                                "/api/track/**").permitAll()
                         // Đăng ký tài khoản (POST /api/users) - không cần auth
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                        // Lead form - khách để lại thông tin (không cần auth)
+                        .requestMatchers(HttpMethod.POST, "/api/leads").permitAll()
 
                         // Upload endpoints: require authentication
                         .requestMatchers("/api/upload/**").hasAnyRole("CUSTOMER", "ARTISAN", "STAFF", "ADMIN")

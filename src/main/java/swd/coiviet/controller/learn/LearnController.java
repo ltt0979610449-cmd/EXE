@@ -1,6 +1,7 @@
 package swd.coiviet.controller.learn;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/learn")
+@Tag(name = "Learn", description = "Học tập - Categories, Modules, Lessons, Quiz (public)")
 public class LearnController {
 
     private final LearnCategoryService categoryService;

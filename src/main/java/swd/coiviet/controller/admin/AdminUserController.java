@@ -1,5 +1,6 @@
 package swd.coiviet.controller.admin;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/admin/users")
+@Tag(name = "Admin", description = "Quản lý người dùng (Admin)")
 public class AdminUserController {
     private final UserService userService;
     private final UserMapper userMapper;

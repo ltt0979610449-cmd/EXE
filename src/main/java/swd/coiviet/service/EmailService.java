@@ -9,4 +9,6 @@ public interface EmailService {
     void sendTourSurchargeNotice(String to, String tourTitle, String tourDate, java.math.BigDecimal surchargeAmount);
     void sendAlternativeTourSuggestion(String to, String originalTourTitle, java.util.List<String> alternativeTours);
     void sendPasswordResetOtp(String to, String otp);
+    void sendPreDepartureReminder(String to, String bookingCode, String tourTitle, String tourDate, String preparationTips);
+    void sendPostTourFeedbackRequest(String to, String bookingCode, String tourTitle, String feedbackLink);
 }

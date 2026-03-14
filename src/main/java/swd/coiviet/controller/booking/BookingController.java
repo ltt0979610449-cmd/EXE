@@ -1,5 +1,6 @@
 package swd.coiviet.controller.booking;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/bookings")
+@Tag(name = "Booking", description = "Đặt tour, hủy đặt, gợi ý tour")
 public class BookingController {
 
     private final BookingService bookingService;

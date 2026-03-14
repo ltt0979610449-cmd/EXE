@@ -1,5 +1,6 @@
 package swd.coiviet.controller.admin;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import java.util.function.Function;
 
 @RestController
 @RequestMapping("/api/admin/dashboard")
+@Tag(name = "Admin", description = "Dashboard thống kê (Admin)")
 public class AdminDashboardController {
     private final UserRepository userRepository;
     private final TourRepository tourRepository;

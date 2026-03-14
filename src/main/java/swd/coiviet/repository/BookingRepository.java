@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import swd.coiviet.enums.BookingStatus;
 import swd.coiviet.model.Booking;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.List;
@@ -28,4 +29,13 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.tour.id = :tourId AND b.status != :excludedStatus")
     long countByTourIdAndStatusNot(@Param("tourId") Long tourId, @Param("excludedStatus") BookingStatus excludedStatus);
+
+    @Query("SELECT b FROM Booking b WHERE b.tourSchedule.tourDate = :tourDate AND b.status = :status")
+    List<Booking> findByTourScheduleTourDateAndStatus(@Param("tourDate") LocalDate tourDate, @Param("status") BookingStatus status);
+
+    @Query("SELECT b FROM Booking b WHERE b.tourSchedule.tourDate = :tourDate AND b.status = :status AND b.preDepartureEmailSentAt IS NULL")
+    List<Booking> findForPreDepartureEmail(@Param("tourDate") LocalDate tourDate, @Param("status") BookingStatus status);
+
+    @Query("SELECT b FROM Booking b WHERE b.tourSchedule.tourDate < :beforeDate AND b.status = :status AND b.postTourFeedbackEmailSentAt IS NULL")
+    List<Booking> findForPostTourFeedback(@Param("beforeDate") LocalDate beforeDate, @Param("status") BookingStatus status);
 }

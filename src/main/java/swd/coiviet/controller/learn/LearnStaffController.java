@@ -1,6 +1,7 @@
 package swd.coiviet.controller.learn;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -28,6 +29,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/learn")
+@Tag(name = "Learn", description = "Quản lý Learn (Staff/Admin)")
 @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
 public class LearnStaffController {
 

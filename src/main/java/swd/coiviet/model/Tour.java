@@ -41,6 +41,10 @@ public class Tour {
     @Column(columnDefinition = "text")
     private String culturalTips;
 
+    /** Lưu ý chuẩn bị trang phục, đồ dùng (gửi trong email nhắc lịch trước ngày đi) */
+    @Column(columnDefinition = "text")
+    private String preparationTips;
+
     private java.math.BigDecimal durationHours;
 
     private Integer maxParticipants;

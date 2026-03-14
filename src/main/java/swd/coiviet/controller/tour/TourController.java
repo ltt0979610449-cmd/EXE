@@ -1,6 +1,7 @@
 package swd.coiviet.controller.tour;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -36,6 +37,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tours")
+@Tag(name = "Tour", description = "Quản lý tour du lịch")
 public class TourController {
 
     private final TourService tourService;
@@ -142,6 +144,8 @@ public class TourController {
             @RequestParam(required = false) String transportation,
             @Parameter(description = "Lưu ý ứng xử văn hoá - JSON array hoặc text", required = false)
             @RequestParam(required = false) String culturalTips,
+            @Parameter(description = "Lưu ý chuẩn bị trang phục, đồ dùng (gửi trong email nhắc lịch)", required = false)
+            @RequestParam(required = false) String preparationTips,
             @Parameter(description = "Số giờ tour", required = false)
             @RequestParam(required = false) java.math.BigDecimal durationHours,
             @Parameter(description = "Số người tham gia tối đa", required = false)
@@ -178,6 +182,7 @@ public class TourController {
                     .bestSeason(bestSeason)
                     .transportation(transportation)
                     .culturalTips(culturalTips)
+                    .preparationTips(preparationTips)
                     .durationHours(durationHours)
                     .maxParticipants(maxParticipants)
                     .price(price)
@@ -238,6 +243,8 @@ public class TourController {
             @RequestParam(required = false) String transportation,
             @Parameter(description = "Lưu ý ứng xử văn hoá - JSON array hoặc text", required = false)
             @RequestParam(required = false) String culturalTips,
+            @Parameter(description = "Lưu ý chuẩn bị trang phục, đồ dùng", required = false)
+            @RequestParam(required = false) String preparationTips,
             @Parameter(description = "Số giờ tour", required = false)
             @RequestParam(required = false) java.math.BigDecimal durationHours,
             @Parameter(description = "Số người tham gia tối đa", required = false)
@@ -271,6 +278,7 @@ public class TourController {
             if (bestSeason != null) existing.setBestSeason(bestSeason);
             if (transportation != null) existing.setTransportation(transportation);
             if (culturalTips != null) existing.setCulturalTips(culturalTips);
+            if (preparationTips != null) existing.setPreparationTips(preparationTips);
             if (durationHours != null) existing.setDurationHours(durationHours);
             if (maxParticipants != null) existing.setMaxParticipants(maxParticipants);
             if (price != null) existing.setPrice(price);

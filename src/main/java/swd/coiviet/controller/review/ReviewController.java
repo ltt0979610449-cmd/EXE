@@ -1,6 +1,7 @@
 package swd.coiviet.controller.review;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/reviews")
+@Tag(name = "Review", description = "Đánh giá tour")
 public class ReviewController {
 
     private final ReviewService reviewService;

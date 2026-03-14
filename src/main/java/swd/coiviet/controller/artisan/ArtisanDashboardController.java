@@ -1,5 +1,6 @@
 package swd.coiviet.controller.artisan;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/artisans/{artisanId}/dashboard")
+@Tag(name = "Artisan", description = "Dashboard nghệ nhân")
 public class ArtisanDashboardController {
     private final ArtisanService artisanService;
     private final TourRepository tourRepository;
