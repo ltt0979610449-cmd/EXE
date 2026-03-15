@@ -59,6 +59,9 @@ public class SecurityConfig {
                         "/api/user-memories/public/**", "/api/vouchers/public/**",
                         "/api/payments/momo/**", "/api/payments/vnpay/**",
                         "/api/bookings/public/**", "/api/learn/public/**").permitAll()
+                        // Public read-only review endpoints (GET) - my-reviews vẫn cần auth
+                        .requestMatchers("/api/reviews/my-reviews").hasAnyRole("CUSTOMER", "ARTISAN", "STAFF", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/reviews", "/api/reviews/tour/**", "/api/reviews/*").permitAll()
 
                         // Admin endpoints: chỉ ADMIN
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -71,7 +74,7 @@ public class SecurityConfig {
                         "/api/provinces", "/api/provinces/**", "/api/tour-schedules/**",
                         "/api/artisans", "/api/artisans/**", "/api/culture-items",
                         "/api/culture-items/**", "/api/blog-posts", "/api/blog-posts/**",
-                        "/api/videos", "/api/videos/**", "/api/vouchers", "/api/vouchers/**").hasAnyRole("CUSTOMER","STAFF", "ADMIN")
+                        "/api/videos", "/api/videos/**", "/api/vouchers", "/api/vouchers/**").hasAnyRole("CUSTOMER", "ARTISAN", "STAFF", "ADMIN")
 
                 // User endpoints + Learn (CUSTOMER, ARTISAN, ADMIN - Role enum thực tế)
                 .requestMatchers("/api/user/**", "/api/bookings/**", "/api/reviews/**", 

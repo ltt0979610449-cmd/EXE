@@ -110,8 +110,11 @@ public class TourWorkflowServiceImpl implements TourWorkflowService {
 
         if (daysUntilTour > 7) {
             // Còn >7 ngày: Đẩy ads, telesale, khuyến mãi
-            if (voucherService.findExistingVoucherForSchedule(schedule.getId(), 20).isPresent()) {
-                return; // Đã có voucher 20%, không tạo lại
+            if (voucherService.findAnyActiveVoucherForSchedule(schedule.getId()).isPresent()) {
+                return; // Đã có voucher còn hiệu lực, không tạo mới
+            }
+            if (voucherService.findRecentVoucherForSchedule(schedule.getId(), 24).isPresent()) {
+                return; // Cooldown: đã tạo voucher trong 24h gần đây
             }
             logger.info("Tour schedule {} còn {} ngày, số lượng booking thấp. Đẩy ads và khuyến mãi", 
                     schedule.getId(), daysUntilTour);
@@ -146,8 +149,11 @@ public class TourWorkflowServiceImpl implements TourWorkflowService {
             
         } else if (daysUntilTour >= 3 && daysUntilTour <= 5) {
             // Còn 3-5 ngày: Gửi email cho khách, đề xuất tour dự phòng
-            if (voucherService.findExistingVoucherForSchedule(schedule.getId(), 30).isPresent()) {
-                return; // Đã có voucher 30%, không tạo lại
+            if (voucherService.findAnyActiveVoucherForSchedule(schedule.getId()).isPresent()) {
+                return; // Đã có voucher còn hiệu lực, tái sử dụng thay vì tạo mới
+            }
+            if (voucherService.findRecentVoucherForSchedule(schedule.getId(), 24).isPresent()) {
+                return; // Cooldown: đã tạo voucher trong 24h gần đây
             }
             logger.info("Tour schedule {} còn {} ngày, số lượng booking thấp. Gửi email cho khách", 
                     schedule.getId(), daysUntilTour);
@@ -350,7 +356,7 @@ public class TourWorkflowServiceImpl implements TourWorkflowService {
         logger.info("Bắt đầu xử lý các tour sắp tới");
         
         LocalDate fromDate = LocalDate.now();
-        LocalDate toDate = LocalDate.now().plusDays(10);
+        LocalDate toDate = LocalDate.now().plusDays(7);
         
         List<TourSchedule> upcomingSchedules = tourScheduleRepo.findUpcomingSchedules(
                 fromDate, toDate, TourScheduleStatus.SCHEDULED);

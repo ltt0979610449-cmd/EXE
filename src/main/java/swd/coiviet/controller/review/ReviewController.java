@@ -130,6 +130,16 @@ public class ReviewController {
         return ResponseEntity.ok(ApiResponse.success(mapToResponse(review), "Tạo review thành công"));
     }
 
+    @GetMapping
+    @Operation(summary = "Lấy tất cả review", description = "Lấy tất cả review đã được duyệt (VISIBLE)")
+    public ResponseEntity<ApiResponse<List<ReviewResponse>>> getAllReviews() {
+        List<Review> reviews = reviewService.findByStatus(ReviewStatus.VISIBLE);
+        List<ReviewResponse> responses = reviews.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(responses));
+    }
+
     @GetMapping("/tour/{tourId}")
     @Operation(summary = "Lấy danh sách review của tour", description = "Lấy tất cả review đã được duyệt của tour")
     public ResponseEntity<ApiResponse<List<ReviewResponse>>> getReviewsByTour(@PathVariable Long tourId) {

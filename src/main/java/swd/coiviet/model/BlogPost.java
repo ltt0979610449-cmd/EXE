@@ -25,8 +25,9 @@ public class BlogPost {
     @Column(columnDefinition = "text", nullable = false)
     private String content;
 
-    @Column(columnDefinition = "text")
-    private String blocksJson;
+    /** JSON array các block: [{"title":"...","content":"...","imageUrl":"..."}] (giống artisan) */
+    @Column(name = "narrative_content", columnDefinition = "text")
+    private String narrativeContent;
 
     @ManyToOne
     @JoinColumn(name = "province_id")
@@ -34,6 +35,14 @@ public class BlogPost {
 
     @Column(columnDefinition = "text")
     private String featuredImageUrl;
+
+    /** Mô tả ngắn cho hero section (giống artisan) */
+    @Column(name = "hero_subtitle", columnDefinition = "text")
+    private String heroSubtitle;
+
+    /** Ảnh panorama full-width (giống artisan) */
+    @Column(name = "panorama_image_url", columnDefinition = "text")
+    private String panoramaImageUrl;
 
     /** URL ảnh gallery, phân cách bằng dấu phẩy (giống artisan) */
     @Column(columnDefinition = "text")

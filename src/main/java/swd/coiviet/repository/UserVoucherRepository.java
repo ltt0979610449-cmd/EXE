@@ -8,5 +8,5 @@ import java.util.Optional;
 
 public interface UserVoucherRepository extends JpaRepository<UserVoucher, Long> {
     Optional<UserVoucher> findByUserIdAndVoucherId(Long userId, Long voucherId);
-    List<UserVoucher> findByUserId(Long userId);
+    List<UserVoucher> findByUserIdOrderByClaimedAtDesc(Long userId);
 }

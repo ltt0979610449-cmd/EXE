@@ -19,5 +19,6 @@ public interface UserLearnProgressService {
     void claimVoucher(Long userId, Long attemptId);
     UserLearnStatsResponse getStats(Long userId);
     List<Object> getMyCourses(Long userId);
+    List<Object> getSavedLessons(Long userId);
     List<UserQuizAttempt> getMyQuizAttempts(Long userId);
 }

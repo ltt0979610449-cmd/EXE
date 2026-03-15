@@ -424,6 +424,36 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
+    public BookingResponse updateBookingStatus(Long bookingId, BookingStatus status) {
+        Booking booking = bookingRepo.findById(bookingId)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Booking không tồn tại"));
+
+        BookingStatus current = booking.getStatus();
+        if (current == status) {
+            return mapToResponse(booking);
+        }
+
+        // Chỉ cho phép: PENDING→CONFIRMED, CONFIRMED→COMPLETED
+        boolean allowed = (current == BookingStatus.PENDING && status == BookingStatus.CONFIRMED)
+                || (current == BookingStatus.CONFIRMED && status == BookingStatus.COMPLETED);
+        if (!allowed) {
+            throw new AppException(ErrorCode.INVALID_REQUEST,
+                    "Chuyển trạng thái không hợp lệ. Chỉ cho phép: PENDING→CONFIRMED, CONFIRMED→COMPLETED. " +
+                            "Để hủy booking, dùng API DELETE /api/bookings/{id}");
+        }
+
+        booking.setStatus(status);
+        booking.setUpdatedAt(LocalDateTime.now());
+        if (status == BookingStatus.COMPLETED) {
+            booking.setPostTourFeedbackEmailSentAt(LocalDateTime.now());
+        }
+        booking = bookingRepo.save(booking);
+
+        return mapToResponse(booking);
+    }
+
+    @Override
     public BigDecimal calculateCancellationFee(Booking booking) {
         if (booking.getTourSchedule() == null || booking.getTourSchedule().getTourDate() == null) {
             return booking.getFinalAmount(); // 100% fee if no date

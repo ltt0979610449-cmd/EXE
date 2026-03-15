@@ -7,6 +7,7 @@ public class UpdateBlogPostRequest {
     private String title;
     private String slug;
     private String content;
+    private String heroSubtitle;
+    private String narrativeContent;
     private Long provinceId;
-    private String blocksJson;
 }

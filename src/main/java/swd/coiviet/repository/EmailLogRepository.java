@@ -16,14 +16,13 @@ public interface EmailLogRepository extends JpaRepository<EmailLog, Long> {
     Page<EmailLog> findByStatus(EmailLog.EmailLogStatus status, Pageable pageable);
 
     @Query("SELECT e FROM EmailLog e WHERE " +
-            "(:recipient IS NULL OR LOWER(e.recipientEmail) LIKE LOWER(CONCAT('%', :recipient, '%'))) AND " +
+            "(:recipient IS NULL OR LOWER(e.recipientEmail) LIKE LOWER(CONCAT('%', CAST(:recipient AS string), '%'))) AND " +
             "(:templateType IS NULL OR e.templateType = :templateType) AND " +
-            "(:opened IS NULL OR (:opened = true AND e.openedAt IS NOT NULL) OR (:opened = false AND e.openedAt IS NULL)) AND " +
-            "(:fromDate IS NULL OR e.sentAt >= :fromDate) AND " +
-            "(:toDate IS NULL OR e.sentAt <= :toDate)")
+            "(:openedFilter = 0 OR (:openedFilter = 1 AND e.openedAt IS NOT NULL) OR (:openedFilter = 2 AND e.openedAt IS NULL)) AND " +
+            "e.sentAt >= :fromDate AND e.sentAt <= :toDate")
     Page<EmailLog> findWithFilters(@Param("recipient") String recipient,
                                    @Param("templateType") String templateType,
-                                   @Param("opened") Boolean opened,
+                                   @Param("openedFilter") int openedFilter,
                                    @Param("fromDate") LocalDateTime fromDate,
                                    @Param("toDate") LocalDateTime toDate,
                                    Pageable pageable);

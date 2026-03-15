@@ -1,5 +1,7 @@
 package swd.coiviet.service.impl;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import swd.coiviet.model.Review;
 import swd.coiviet.repository.ReviewRepository;
@@ -37,6 +39,14 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public List<Review> findByStatus(ReviewStatus status) { return repo.findByStatus(status); }
+
+    @Override
+    public Page<Review> findByStatus(ReviewStatus status, Pageable pageable) {
+        return repo.findByStatus(status, pageable);
+    }
+
+    @Override
+    public Page<Review> findAll(Pageable pageable) { return repo.findAll(pageable); }
 
     @Override
     public void deleteById(Long id) { repo.deleteById(id); }

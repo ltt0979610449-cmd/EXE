@@ -34,6 +34,10 @@ Quy ước:
 `CancelBookingRequest` (body optional):
 - `reason` (optional)
 
+**PUT** `/api/bookings/{id}/status` (chỉ ADMIN/STAFF)  
+Query param:
+- `status` (required: `PENDING` | `CONFIRMED` | `COMPLETED`). Chỉ cho phép: PENDING->CONFIRMED, CONFIRMED->COMPLETED.
+
 **POST** `/api/bookings/suggest`  
 `SuggestTourRequest`:
 - `provinceId` (required)
@@ -139,18 +143,29 @@ Nghệ nhân cập nhật hồ sơ của chính mình (ID lấy từ token, khô
 
 ---
 
-### Blog Post (multipart)
+### Blog Post (multipart, format giống Artisan)
 **POST** `/api/blog-posts`  
 `CreateBlogPostRequest`:
 - `title` (required)
-- `content` (required)
+- `content` hoặc `narrativeContent` (ít nhất một required)
 - `slug`, `provinceId` (optional)
+- `heroSubtitle` (optional) – mô tả ngắn cho hero section
+- `narrativeContent` (optional) – JSON: `[{"title":"...","content":"...","imageUrl":"..."}]`
 - `featuredImage` (file, optional)
+- `panoramaImage` (file, optional) – ảnh panorama full-width
+- `images` (files[], optional) – gallery ảnh
 
 **PUT** `/api/blog-posts/{id}`  
 `UpdateBlogPostRequest`: gửi **chỉ** field cần thay đổi  
 - `title`, `content`, `slug`, `provinceId` (optional)
+- `heroSubtitle`, `narrativeContent` (optional)
 - `featuredImage` (file, optional)
+- `panoramaImage` (file, optional)
+- `images` (files[], optional)
+
+**GET** `/api/blog-posts/public/{id}/detail`  
+**GET** `/api/blog-posts/public/slug/{slug}/detail`  
+Trả về `BlogPostDetailResponse` với `narrativeContent` (List), `images` (List) đã parse sẵn cho FE.
 
 ---
 

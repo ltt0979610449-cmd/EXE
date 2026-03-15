@@ -1,7 +1,9 @@
 package swd.coiviet.controller.booking;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.jsonwebtoken.Claims;
+import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -17,6 +19,7 @@ import swd.coiviet.exception.AppException;
 import swd.coiviet.exception.ErrorCode;
 import swd.coiviet.model.Booking;
 import swd.coiviet.service.BookingService;
+import swd.coiviet.enums.BookingStatus;
 import swd.coiviet.enums.Role;
 import swd.coiviet.service.TourWorkflowService;
 
@@ -138,6 +141,20 @@ public class BookingController {
             @RequestParam Integer numParticipants) {
         boolean available = tourWorkflowService.checkTourAvailability(tourScheduleId, numParticipants);
         return ResponseEntity.ok(ApiResponse.success(available));
+    }
+
+    /**
+     * Điều chỉnh trạng thái booking thủ công (chỉ ADMIN/STAFF).
+     * Cho phép: PENDING->CONFIRMED, CONFIRMED->COMPLETED.
+     */
+    @PutMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Điều chỉnh trạng thái booking", description = "Chỉ ADMIN/STAFF. Cho phép: PENDING->CONFIRMED, CONFIRMED->COMPLETED")
+    public ResponseEntity<ApiResponse<BookingResponse>> updateBookingStatus(
+            @PathVariable Long id,
+            @RequestParam BookingStatus status) {
+        BookingResponse response = bookingService.updateBookingStatus(id, status);
+        return ResponseEntity.ok(ApiResponse.success(response, "Cập nhật trạng thái thành công"));
     }
 
     /**

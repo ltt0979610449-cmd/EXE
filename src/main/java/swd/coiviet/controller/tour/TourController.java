@@ -64,6 +64,19 @@ public class TourController {
         return ResponseEntity.ok(ApiResponse.success(tours));
     }
 
+    @GetMapping("/public/discounted")
+    @Operation(summary = "Lấy tour có giảm giá", description = "Tour có schedule có discountPercent > 0 hoặc có voucher active")
+    public ResponseEntity<ApiResponse<List<Tour>>> getDiscountedTours(
+            @Parameter(description = "Chỉ lấy schedule từ ngày này trở đi (yyyy-MM-dd)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @Parameter(description = "Lọc theo tỉnh thành")
+            @RequestParam(required = false) Long provinceId,
+            @Parameter(description = "Giới hạn số tour trả về")
+            @RequestParam(defaultValue = "50") Integer limit) {
+        List<Tour> tours = tourService.findToursWithDiscount(fromDate, provinceId, limit);
+        return ResponseEntity.ok(ApiResponse.success(tours));
+    }
+
     @GetMapping("/public/{id}")
     public ResponseEntity<ApiResponse<Tour>> getTourById(@PathVariable Long id) {
         Tour tour = tourService.findById(id)

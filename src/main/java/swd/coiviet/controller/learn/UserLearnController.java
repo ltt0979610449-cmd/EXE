@@ -122,6 +122,13 @@ public class UserLearnController {
         return ResponseEntity.ok(ApiResponse.success(progressService.getMyCourses(userId)));
     }
 
+    @GetMapping("/users/me/saved-lessons")
+    @Operation(summary = "Danh sách bài đã lưu")
+    public ResponseEntity<ApiResponse<List<Object>>> getSavedLessons(HttpServletRequest request) {
+        Long userId = getCurrentUserId(request);
+        return ResponseEntity.ok(ApiResponse.success(progressService.getSavedLessons(userId)));
+    }
+
     @PostMapping("/achievements/{attemptId}/claim-voucher")
     @Operation(summary = "Nhận voucher khi đạt 100%")
     public ResponseEntity<ApiResponse<Void>> claimVoucher(@PathVariable Long attemptId, HttpServletRequest request) {

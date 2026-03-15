@@ -50,11 +50,19 @@ public class AdminMailController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        LocalDateTime fromDate = from != null ? from.atStartOfDay() : null;
-        LocalDateTime toDate = to != null ? to.atTime(LocalTime.MAX) : null;
+        // Use sentinel values instead of null to avoid PostgreSQL "could not determine data type of parameter"
+        LocalDateTime fromDate = from != null ? from.atStartOfDay() : LocalDateTime.of(1970, 1, 1, 0, 0);
+        LocalDateTime toDate = to != null ? to.atTime(LocalTime.MAX) : LocalDateTime.of(2099, 12, 31, 23, 59, 59);
+
+        // Normalize empty strings to null to avoid JPQL parameter binding issues
+        String recipientParam = (recipient != null && !recipient.isBlank()) ? recipient.trim() : null;
+        String templateParam = (templateType != null && !templateType.isBlank()) ? templateType.trim() : null;
+
+        // 0=all, 1=opened only, 2=not opened - avoids null Boolean parameter type inference
+        int openedFilter = (opened == null) ? 0 : (opened ? 1 : 2);
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<EmailLog> logs = emailLogRepository.findWithFilters(recipient, templateType, opened, fromDate, toDate, pageable);
+        Page<EmailLog> logs = emailLogRepository.findWithFilters(recipientParam, templateParam, openedFilter, fromDate, toDate, pageable);
         Page<EmailLogResponse> response = logs.map(EmailLogResponse::fromEntity);
 
         return ResponseEntity.ok(ApiResponse.success(response, "Lấy danh sách mail thành công"));

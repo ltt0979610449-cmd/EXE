@@ -2,6 +2,7 @@ package swd.coiviet.service;
 
 import swd.coiviet.model.Tour;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,4 +14,5 @@ public interface TourService {
     List<Tour> findAll();
     void deleteById(Long id);
     void updateTourRating(Long tourId);
+    List<Tour> findToursWithDiscount(LocalDate fromDate, Long provinceId, Integer limit);
 }

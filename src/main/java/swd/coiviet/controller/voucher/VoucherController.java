@@ -2,16 +2,20 @@ package swd.coiviet.controller.voucher;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import swd.coiviet.configuration.JwtUtil;
 import swd.coiviet.dto.request.CreateVoucherRequest;
 import swd.coiviet.dto.request.UpdateVoucherRequest;
 import swd.coiviet.dto.response.ApiResponse;
+import swd.coiviet.dto.response.UserVoucherClaimedResponse;
 import swd.coiviet.dto.response.VoucherResponse;
 import swd.coiviet.exception.AppException;
 import swd.coiviet.exception.ErrorCode;
+import swd.coiviet.model.UserVoucher;
 import swd.coiviet.model.Voucher;
 import swd.coiviet.service.NotificationService;
 import swd.coiviet.service.VoucherService;
@@ -27,9 +31,22 @@ public class VoucherController {
 
     private final VoucherService voucherService;
     private final NotificationService notificationService;
-    public VoucherController(VoucherService voucherService, NotificationService notificationService) {
+    private final JwtUtil jwtUtil;
+
+    public VoucherController(VoucherService voucherService, NotificationService notificationService, JwtUtil jwtUtil) {
         this.voucherService = voucherService;
         this.notificationService = notificationService;
+        this.jwtUtil = jwtUtil;
+    }
+
+    @GetMapping("/public/by-tour/{tourId}")
+    @Operation(summary = "Lấy voucher theo tour", description = "Lấy danh sách voucher active áp dụng cho tour (voucher gắn với schedule của tour)")
+    public ResponseEntity<ApiResponse<List<VoucherResponse>>> getVouchersByTourId(@PathVariable Long tourId) {
+        List<Voucher> vouchers = voucherService.findActiveVouchersByTourId(tourId);
+        List<VoucherResponse> responses = vouchers.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(responses));
     }
 
     @GetMapping("/public/validate/{code}")
@@ -55,6 +72,17 @@ public class VoucherController {
         }
         
         return ResponseEntity.ok(ApiResponse.success(mapToResponse(voucher)));
+    }
+
+    @GetMapping("/my-claimed")
+    @Operation(summary = "Voucher đã claim của user", description = "Lấy danh sách voucher user đã claim được")
+    public ResponseEntity<ApiResponse<List<UserVoucherClaimedResponse>>> getMyClaimedVouchers(HttpServletRequest request) {
+        Long userId = getCurrentUserId(request);
+        List<UserVoucher> userVouchers = voucherService.findClaimedVouchersByUserId(userId);
+        List<UserVoucherClaimedResponse> responses = userVouchers.stream()
+                .map(this::mapToClaimedResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(responses));
     }
 
     @GetMapping
@@ -177,5 +205,43 @@ public class VoucherController {
                 .isActive(voucher.getIsActive())
                 .createdAt(voucher.getCreatedAt())
                 .build();
+    }
+
+    private UserVoucherClaimedResponse mapToClaimedResponse(UserVoucher uv) {
+        Voucher v = uv.getVoucher();
+        return UserVoucherClaimedResponse.builder()
+                .id(v.getId())
+                .code(v.getCode())
+                .discountType(v.getDiscountType())
+                .discountValue(v.getDiscountValue())
+                .minPurchase(v.getMinPurchase())
+                .maxUsage(v.getMaxUsage())
+                .currentUsage(v.getCurrentUsage())
+                .validFrom(v.getValidFrom())
+                .validUntil(v.getValidUntil())
+                .isActive(v.getIsActive())
+                .claimedAt(uv.getClaimedAt())
+                .usedAt(uv.getUsedAt())
+                .build();
+    }
+
+    private Long getCurrentUserId(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new AppException(ErrorCode.UNAUTHORIZED, "Token không hợp lệ");
+        }
+        String token = authHeader.substring(7);
+        try {
+            if (!jwtUtil.validateToken(token)) {
+                throw new AppException(ErrorCode.UNAUTHORIZED, "Token không hợp lệ hoặc đã hết hạn");
+            }
+            Integer userId = jwtUtil.getClaims(token).get("userId", Integer.class);
+            if (userId == null) {
+                throw new AppException(ErrorCode.UNAUTHORIZED, "Token không chứa thông tin user");
+            }
+            return Long.valueOf(userId);
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.UNAUTHORIZED, "Token không hợp lệ: " + e.getMessage());
+        }
     }
 }

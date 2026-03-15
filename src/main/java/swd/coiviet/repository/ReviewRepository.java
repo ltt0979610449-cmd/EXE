@@ -1,5 +1,7 @@
 package swd.coiviet.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,6 +18,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     Optional<Review> findByBookingId(Long bookingId);
     List<Review> findByUserId(Long userId);
     List<Review> findByStatus(ReviewStatus status);
+    Page<Review> findByStatus(ReviewStatus status, Pageable pageable);
     long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
     long countByStatus(ReviewStatus status);
     @Query("SELECT AVG(r.rating) FROM Review r WHERE r.status = :status")

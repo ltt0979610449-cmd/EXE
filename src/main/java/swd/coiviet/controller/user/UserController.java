@@ -62,6 +62,13 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(users));
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser(HttpServletRequest request) {
+        Long userId = getCurrentUserId(request);
+        User user = userService.findById(userId).orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "User not found"));
+        return ResponseEntity.ok(ApiResponse.success(userMapper.toResponse(user)));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<UserResponse>> getUser(@PathVariable Long id) {
         User user = userService.findById(id).orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "User not found"));

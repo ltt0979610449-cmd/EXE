@@ -1,5 +1,6 @@
 package swd.coiviet.service;
 
+import swd.coiviet.dto.response.BlogPostDetailResponse;
 import swd.coiviet.model.BlogPost;
 
 import java.util.List;
@@ -11,4 +12,8 @@ public interface BlogPostService {
     Optional<BlogPost> findBySlug(String slug);
     List<BlogPost> findAll();
     void deleteById(Long id);
+
+    BlogPostDetailResponse getDetailById(Long id);
+
+    Optional<BlogPostDetailResponse> getDetailBySlug(String slug);
 }

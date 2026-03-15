@@ -35,20 +35,6 @@ public class TourSchedulerTask {
     }
 
     /**
-     * Chạy mỗi 6 giờ để kiểm tra các tour cần xử lý ngay
-     */
-    @Scheduled(cron = "0 0 */6 * * ?") // Mỗi 6 giờ
-    public void checkUrgentTours() {
-        logger.info("Bắt đầu scheduled task: Kiểm tra các tour cần xử lý ngay");
-        try {
-            tourWorkflowService.processUpcomingTours();
-            logger.info("Hoàn thành scheduled task: Kiểm tra các tour cần xử lý ngay");
-        } catch (Exception e) {
-            logger.error("Lỗi khi chạy scheduled task kiểm tra tour: {}", e.getMessage(), e);
-        }
-    }
-
-    /**
      * Chạy mỗi ngày lúc 8:00 AM - Gửi email nhắc lịch trước 3 ngày đi
      */
     @Scheduled(cron = "0 0 8 * * ?") // 8:00 AM mỗi ngày

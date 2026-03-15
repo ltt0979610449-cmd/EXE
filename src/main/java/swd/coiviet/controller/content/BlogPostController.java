@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import swd.coiviet.dto.response.ApiResponse;
+import swd.coiviet.dto.response.BlogPostDetailResponse;
 import swd.coiviet.enums.PublicationStatus;
 import swd.coiviet.exception.AppException;
 import swd.coiviet.exception.ErrorCode;
@@ -64,35 +65,55 @@ public class BlogPostController {
         return ResponseEntity.ok(ApiResponse.success(post));
     }
 
+    @GetMapping("/public/{id}/detail")
+    @Operation(summary = "Lấy chi tiết blog post (format artisan)", description = "Trả về thông tin đầy đủ cho FE: heroSubtitle, narrativeContent, images parsed")
+    public ResponseEntity<ApiResponse<BlogPostDetailResponse>> getBlogPostDetail(@PathVariable Long id) {
+        BlogPostDetailResponse detail = blogPostService.getDetailById(id);
+        return ResponseEntity.ok(ApiResponse.success(detail));
+    }
+
+    @GetMapping("/public/slug/{slug}/detail")
+    @Operation(summary = "Lấy chi tiết blog post theo slug (format artisan)", description = "Trả về thông tin đầy đủ cho FE theo slug")
+    public ResponseEntity<ApiResponse<BlogPostDetailResponse>> getBlogPostDetailBySlug(@PathVariable String slug) {
+        BlogPostDetailResponse detail = blogPostService.getDetailBySlug(slug)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Blog post không tồn tại"));
+        return ResponseEntity.ok(ApiResponse.success(detail));
+    }
+
     @PostMapping(consumes = {"multipart/form-data"})
-    @Operation(summary = "Tạo blog post mới", description = "Tạo blog post với featured image")
+    @Operation(summary = "Tạo blog post mới", description = "Tạo blog post với featured image (format giống artisan)")
     public ResponseEntity<ApiResponse<BlogPost>> createBlogPost(
             @Parameter(description = "Tiêu đề blog post", required = true)
             @RequestParam @NotBlank(message = "Tiêu đề không được để trống") String title,
             @Parameter(description = "Slug của blog post", required = false)
             @RequestParam(required = false) String slug,
-            @Parameter(description = "Nội dung blog post", required = false)
+            @Parameter(description = "Nội dung intro", required = false)
             @RequestParam(required = false) String content,
-            @Parameter(description = "Blocks JSON", required = false)
-            @RequestParam(required = false) String blocksJson,
+            @Parameter(description = "Mô tả ngắn cho hero", required = false)
+            @RequestParam(required = false) String heroSubtitle,
+            @Parameter(description = "Narrative JSON: [{\"title\":\"...\",\"content\":\"...\",\"imageUrl\":\"...\"}]", required = false)
+            @RequestParam(required = false) String narrativeContent,
             @Parameter(description = "ID tỉnh thành", required = false)
             @RequestParam(required = false) Long provinceId,
             @Parameter(description = "Featured image", schema = @Schema(type = "string", format = "binary"))
             @RequestPart(value = "featuredImage", required = false) MultipartFile featuredImage,
+            @Parameter(description = "Ảnh panorama full-width", schema = @Schema(type = "string", format = "binary"))
+            @RequestPart(value = "panoramaImage", required = false) MultipartFile panoramaImage,
             @Parameter(description = "Danh sách ảnh gallery (có thể chọn nhiều ảnh)",
                     array = @ArraySchema(schema = @Schema(type = "string", format = "binary")))
             @RequestPart(value = "images", required = false) MultipartFile[] images) {
         try {
             boolean contentBlank = isBlank(content);
-            boolean blocksBlank = isBlank(blocksJson);
-            if (contentBlank && blocksBlank) {
-                throw new AppException(ErrorCode.REQUIRED_FIELD_MISSING, "Nội dung hoặc blocks không được để trống");
+            boolean narrativeBlank = isBlank(narrativeContent);
+            if (contentBlank && narrativeBlank) {
+                throw new AppException(ErrorCode.REQUIRED_FIELD_MISSING, "Nội dung hoặc narrativeContent không được để trống");
             }
             BlogPost post = BlogPost.builder()
                     .title(title)
                     .slug(slug)
                     .content(contentBlank ? "" : content)
-                    .blocksJson(blocksJson)
+                    .heroSubtitle(heroSubtitle)
+                    .narrativeContent(narrativeContent)
                     .status(PublicationStatus.DRAFT)
                     .createdAt(LocalDateTime.now())
                     .build();
@@ -109,6 +130,13 @@ public class BlogPostController {
             if (featuredImage != null && !featuredImage.isEmpty() && featuredImage.getSize() > 0) {
                 String featuredImageUrl = cloudinaryService.uploadBlogImage(featuredImage, saved.getId());
                 saved.setFeaturedImageUrl(featuredImageUrl);
+                saved = blogPostService.save(saved);
+            }
+
+            // Upload panorama image if provided
+            if (panoramaImage != null && !panoramaImage.isEmpty() && panoramaImage.getSize() > 0) {
+                String panoramaImageUrl = cloudinaryService.uploadBlogImage(panoramaImage, saved.getId());
+                saved.setPanoramaImageUrl(panoramaImageUrl);
                 saved = blogPostService.save(saved);
             }
 
@@ -133,21 +161,25 @@ public class BlogPostController {
     }
 
     @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
-    @Operation(summary = "Cập nhật blog post", description = "Cập nhật thông tin blog post và featured image")
+    @Operation(summary = "Cập nhật blog post", description = "Cập nhật thông tin blog post và featured image (format giống artisan)")
     public ResponseEntity<ApiResponse<BlogPost>> updateBlogPost(
             @PathVariable Long id,
             @Parameter(description = "Tiêu đề blog post", required = false)
             @RequestParam(required = false) String title,
             @Parameter(description = "Slug của blog post", required = false)
             @RequestParam(required = false) String slug,
-            @Parameter(description = "Nội dung blog post", required = false)
+            @Parameter(description = "Nội dung intro", required = false)
             @RequestParam(required = false) String content,
-            @Parameter(description = "Blocks JSON", required = false)
-            @RequestParam(required = false) String blocksJson,
+            @Parameter(description = "Mô tả ngắn cho hero", required = false)
+            @RequestParam(required = false) String heroSubtitle,
+            @Parameter(description = "Narrative JSON: [{\"title\":\"...\",\"content\":\"...\",\"imageUrl\":\"...\"}]", required = false)
+            @RequestParam(required = false) String narrativeContent,
             @Parameter(description = "ID tỉnh thành", required = false)
             @RequestParam(required = false) Long provinceId,
             @Parameter(description = "Featured image mới (nếu có)", schema = @Schema(type = "string", format = "binary"))
             @RequestPart(value = "featuredImage", required = false) MultipartFile featuredImage,
+            @Parameter(description = "Ảnh panorama full-width (nếu có)", schema = @Schema(type = "string", format = "binary"))
+            @RequestPart(value = "panoramaImage", required = false) MultipartFile panoramaImage,
             @Parameter(description = "Danh sách ảnh gallery (có thể chọn nhiều ảnh)",
                     array = @ArraySchema(schema = @Schema(type = "string", format = "binary")))
             @RequestPart(value = "images", required = false) MultipartFile[] images) {
@@ -156,15 +188,16 @@ public class BlogPostController {
         
         try {
             boolean contentBlank = isBlank(content);
-            boolean blocksBlank = isBlank(blocksJson);
-            if (contentBlank && blocksBlank && (content != null || blocksJson != null)) {
-                throw new AppException(ErrorCode.REQUIRED_FIELD_MISSING, "Nội dung hoặc blocks không được để trống");
+            boolean narrativeBlank = isBlank(narrativeContent);
+            if (contentBlank && narrativeBlank && (content != null || narrativeContent != null)) {
+                throw new AppException(ErrorCode.REQUIRED_FIELD_MISSING, "Nội dung hoặc narrativeContent không được để trống");
             }
             // Update fields
             if (title != null) existing.setTitle(title);
             if (slug != null) existing.setSlug(slug);
             if (content != null) existing.setContent(content);
-            if (blocksJson != null) existing.setBlocksJson(blocksJson);
+            if (heroSubtitle != null) existing.setHeroSubtitle(heroSubtitle);
+            if (narrativeContent != null) existing.setNarrativeContent(narrativeContent);
             if (provinceId != null) {
                 Province province = provinceService.findById(provinceId)
                         .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Tỉnh thành không tồn tại"));
@@ -181,6 +214,16 @@ public class BlogPostController {
                 }
                 String featuredImageUrl = cloudinaryService.uploadBlogImage(featuredImage, id);
                 existing.setFeaturedImageUrl(featuredImageUrl);
+            }
+
+            // Handle panorama image
+            if (panoramaImage != null && !panoramaImage.isEmpty() && panoramaImage.getSize() > 0) {
+                if (existing.getPanoramaImageUrl() != null) {
+                    String publicId = cloudinaryService.extractPublicIdFromUrl(existing.getPanoramaImageUrl());
+                    if (publicId != null) cloudinaryService.deleteResource(publicId);
+                }
+                String panoramaImageUrl = cloudinaryService.uploadBlogImage(panoramaImage, id);
+                existing.setPanoramaImageUrl(panoramaImageUrl);
             }
 
             // Handle gallery images
@@ -245,9 +288,12 @@ public class BlogPostController {
         // Delete featured image
         if (post.getFeaturedImageUrl() != null) {
             String publicId = cloudinaryService.extractPublicIdFromUrl(post.getFeaturedImageUrl());
-            if (publicId != null) {
-                cloudinaryService.deleteResource(publicId);
-            }
+            if (publicId != null) cloudinaryService.deleteResource(publicId);
+        }
+        // Delete panorama image
+        if (post.getPanoramaImageUrl() != null) {
+            String publicId = cloudinaryService.extractPublicIdFromUrl(post.getPanoramaImageUrl());
+            if (publicId != null) cloudinaryService.deleteResource(publicId);
         }
         // Delete gallery images
         if (post.getImages() != null && !post.getImages().isEmpty()) {

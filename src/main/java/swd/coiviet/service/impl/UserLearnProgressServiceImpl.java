@@ -371,6 +371,27 @@ public class UserLearnProgressServiceImpl implements UserLearnProgressService {
     }
 
     @Override
+    public List<Object> getSavedLessons(Long userId) {
+        List<UserLessonSave> saves = saveRepo.findByUserId(userId);
+        List<Object> result = new ArrayList<>();
+        for (UserLessonSave save : saves) {
+            if (save.getLesson() != null) {
+                LearnLesson l = save.getLesson();
+                result.add(LearnLessonSummaryResponse.builder()
+                        .id(l.getId())
+                        .title(l.getTitle())
+                        .slug(l.getSlug())
+                        .thumbnailUrl(l.getImageUrl())
+                        .duration(l.getEstimatedMinutes())
+                        .videoUrl(l.getVideoUrl())
+                        .orderIndex(l.getOrderIndex())
+                        .build());
+            }
+        }
+        return result;
+    }
+
+    @Override
     public List<UserQuizAttempt> getMyQuizAttempts(Long userId) {
         return attemptRepo.findByUserIdOrderBySubmittedAtDesc(userId);
     }

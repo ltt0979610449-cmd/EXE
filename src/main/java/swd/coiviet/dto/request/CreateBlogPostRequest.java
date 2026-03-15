@@ -12,7 +12,9 @@ public class CreateBlogPostRequest {
 
     private String content;
 
-    private Long provinceId;
+    private String heroSubtitle;
 
-    private String blocksJson;
+    private String narrativeContent;
+
+    private Long provinceId;
 }

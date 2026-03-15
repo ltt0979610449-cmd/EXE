@@ -2,6 +2,7 @@ package swd.coiviet.service;
 
 import swd.coiviet.model.Voucher;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface VoucherService {
@@ -12,4 +13,12 @@ public interface VoucherService {
     void deleteById(Long id);
 
     Optional<Voucher> findExistingVoucherForSchedule(Long tourScheduleId, Integer discountPercent);
+
+    Optional<Voucher> findAnyActiveVoucherForSchedule(Long tourScheduleId);
+
+    Optional<Voucher> findRecentVoucherForSchedule(Long tourScheduleId, int withinHours);
+
+    List<swd.coiviet.model.UserVoucher> findClaimedVouchersByUserId(Long userId);
+
+    List<Voucher> findActiveVouchersByTourId(Long tourId);
 }

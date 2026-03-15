@@ -34,4 +34,7 @@ public interface BookingService {
 
     /** Giảm totalBookings của tour khi hủy booking đã thanh toán */
     void decrementTourTotalBookings(Booking booking);
+
+    /** Cập nhật trạng thái booking thủ công (chỉ ADMIN/STAFF). Cho phép: PENDING→CONFIRMED, CONFIRMED→COMPLETED */
+    BookingResponse updateBookingStatus(Long bookingId, BookingStatus status);
 }
