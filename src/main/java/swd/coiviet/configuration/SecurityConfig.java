@@ -115,7 +115,7 @@ public class SecurityConfig {
                         .title("CoiViet")
                         .version("1.0")
                         .description("API documentation for the CoiViet System"))
-                   .addServersItem(new Server().url("https://exe-1-k8ma.onrender.com/"));
+                   .addServersItem(new Server().url("https://coiviet.onrender.com/"));
     }
 
     @Bean
@@ -127,7 +127,7 @@ public class SecurityConfig {
         configuration.addAllowedOriginPattern("https://127.0.0.1:*");
         configuration.addAllowedOriginPattern("https://*.ngrok-free.app");
         configuration.addAllowedOriginPattern("https://coiviet.asia/");
-        configuration.addAllowedOriginPattern("https://exe-project-two.vercel.app/");
+        configuration.addAllowedOriginPattern("https://coiviet.onrender.com/");
         configuration.addAllowedOriginPattern("http://localhost:8080");
         configuration.addAllowedOriginPattern("https://*.onrender.com");
         configuration.addAllowedOrigin("https://exe-1-k8ma.onrender.com");
