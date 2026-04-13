@@ -252,35 +252,39 @@ public class BookingServiceImpl implements BookingService {
         BigDecimal discountAmount = BigDecimal.ZERO;
         BigDecimal finalAmount = totalAmount;
 
-        // Apply voucher if provided
+        // Apply voucher if provided (mỗi voucher chỉ dùng 1 lần/account)
         if (request.getVoucherCode() != null && !request.getVoucherCode().isEmpty()) {
             Optional<Voucher> voucherOpt = voucherService.findByCode(request.getVoucherCode());
             if (voucherOpt.isPresent()) {
                 Voucher voucher = voucherOpt.get();
                 LocalDateTime now = LocalDateTime.now();
-                
-                if (voucher.getIsActive() 
+
+                if (voucherService.hasUserUsedVoucher(userId, voucher.getId())) {
+                    throw new AppException(ErrorCode.VOUCHER_ALREADY_USED, "Voucher này đã được sử dụng cho tài khoản của bạn");
+                }
+
+                if (voucher.getIsActive()
                         && voucher.getValidFrom() != null && now.isAfter(voucher.getValidFrom())
                         && voucher.getValidUntil() != null && now.isBefore(voucher.getValidUntil())
                         && (voucher.getMaxUsage() == null || voucher.getCurrentUsage() < voucher.getMaxUsage())
                         && (voucher.getMinPurchase() == null || finalAmount.compareTo(voucher.getMinPurchase()) >= 0)) {
-                    
+
                     if ("PERCENTAGE".equals(voucher.getDiscountType())) {
                         discountAmount = finalAmount.multiply(voucher.getDiscountValue())
                                 .divide(BigDecimal.valueOf(100));
                     } else if ("FIXED".equals(voucher.getDiscountType())) {
                         discountAmount = voucher.getDiscountValue();
                     }
-                    
+
                     if (discountAmount.compareTo(finalAmount) > 0) {
                         discountAmount = finalAmount;
                     }
-                    
+
                     finalAmount = finalAmount.subtract(discountAmount);
-                    
-                    // Update voucher usage
-                    voucher.setCurrentUsage(voucher.getCurrentUsage() + 1);
+
+                    voucher.setCurrentUsage(voucher.getCurrentUsage() != null ? voucher.getCurrentUsage() + 1 : 1);
                     voucherService.save(voucher);
+                    voucherService.recordVoucherUsage(userId, voucher);
                 }
             }
         }

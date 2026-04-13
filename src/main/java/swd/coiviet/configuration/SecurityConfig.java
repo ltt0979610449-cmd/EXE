@@ -126,7 +126,7 @@ public class SecurityConfig {
         configuration.addAllowedOriginPattern("https://localhost:*");
         configuration.addAllowedOriginPattern("https://127.0.0.1:*");
         configuration.addAllowedOriginPattern("https://*.ngrok-free.app");
-        configuration.addAllowedOriginPattern("https://*.railway.app");
+        configuration.addAllowedOriginPattern("https://coiviet.asia/");
         configuration.addAllowedOriginPattern("https://exe-project-two.vercel.app/");
         configuration.addAllowedOriginPattern("http://localhost:8080");
         configuration.addAllowedOriginPattern("https://*.onrender.com");

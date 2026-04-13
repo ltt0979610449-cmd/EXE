@@ -29,4 +29,8 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
             "AND v.isActive = true AND v.validFrom <= :now AND v.validUntil > :now " +
             "AND (v.maxUsage IS NULL OR v.currentUsage < v.maxUsage)")
     List<Voucher> findActiveVouchersByTourId(@Param("tourId") Long tourId, @Param("now") LocalDateTime now);
+
+    @Query("SELECT v FROM Voucher v WHERE v.isActive = true AND v.validFrom <= :now AND v.validUntil > :now " +
+            "AND (v.maxUsage IS NULL OR v.currentUsage < v.maxUsage)")
+    List<Voucher> findAllActiveVouchers(@Param("now") LocalDateTime now);
 }

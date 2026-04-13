@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import swd.coiviet.configuration.JwtUtil;
 import swd.coiviet.dto.request.CreateVoucherRequest;
 import swd.coiviet.dto.request.UpdateVoucherRequest;
+import swd.coiviet.dto.response.AccountVouchersResponse;
 import swd.coiviet.dto.response.ApiResponse;
 import swd.coiviet.dto.response.UserVoucherClaimedResponse;
 import swd.coiviet.dto.response.VoucherResponse;
@@ -74,8 +75,16 @@ public class VoucherController {
         return ResponseEntity.ok(ApiResponse.success(mapToResponse(voucher)));
     }
 
+    @GetMapping("/my")
+    @Operation(summary = "Voucher của tài khoản", description = "Lấy tất cả voucher user có thể dùng: voucher đã nhận (quiz, admin gửi) + voucher hệ thống. Mỗi voucher chỉ dùng 1 lần/account.")
+    public ResponseEntity<ApiResponse<AccountVouchersResponse>> getMyVouchers(HttpServletRequest request) {
+        Long userId = getCurrentUserId(request);
+        AccountVouchersResponse response = voucherService.findAvailableVouchersForUser(userId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @GetMapping("/my-claimed")
-    @Operation(summary = "Voucher đã claim của user", description = "Lấy danh sách voucher user đã claim được")
+    @Operation(summary = "Voucher đã claim của user", description = "Lấy danh sách voucher user đã claim được (chưa dùng)")
     public ResponseEntity<ApiResponse<List<UserVoucherClaimedResponse>>> getMyClaimedVouchers(HttpServletRequest request) {
         Long userId = getCurrentUserId(request);
         List<UserVoucher> userVouchers = voucherService.findClaimedVouchersByUserId(userId);

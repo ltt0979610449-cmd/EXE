@@ -1,7 +1,6 @@
 package swd.coiviet.mapper;
 
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import swd.coiviet.dto.request.CreateUserRequest;
 import swd.coiviet.dto.request.UpdateUserRequest;

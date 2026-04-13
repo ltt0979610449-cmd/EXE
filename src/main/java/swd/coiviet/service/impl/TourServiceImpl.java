@@ -1,9 +1,11 @@
 package swd.coiviet.service.impl;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import swd.coiviet.enums.Status;
 import swd.coiviet.enums.TourScheduleStatus;
 import swd.coiviet.model.Tour;
+import swd.coiviet.repository.TourCultureItemRepository;
 import swd.coiviet.repository.TourRepository;
 import swd.coiviet.repository.TourScheduleRepository;
 import swd.coiviet.repository.VoucherRepository;
@@ -26,13 +28,16 @@ import java.util.stream.Collectors;
 public class TourServiceImpl implements TourService {
     private final TourRepository repo;
     private final TourScheduleRepository tourScheduleRepository;
+    private final TourCultureItemRepository tourCultureItemRepository;
     private final VoucherRepository voucherRepository;
     private final ReviewService reviewService;
 
     public TourServiceImpl(TourRepository repo, TourScheduleRepository tourScheduleRepository,
+                           TourCultureItemRepository tourCultureItemRepository,
                            VoucherRepository voucherRepository, ReviewService reviewService) {
         this.repo = repo;
         this.tourScheduleRepository = tourScheduleRepository;
+        this.tourCultureItemRepository = tourCultureItemRepository;
         this.voucherRepository = voucherRepository;
         this.reviewService = reviewService;
     }
@@ -53,7 +58,11 @@ public class TourServiceImpl implements TourService {
     public List<Tour> findAll() { return repo.findAll(); }
 
     @Override
-    public void deleteById(Long id) { repo.deleteById(id); }
+    @Transactional
+    public void deleteById(Long id) {
+        tourCultureItemRepository.deleteByTourId(id);
+        repo.deleteById(id);
+    }
 
     @Override
     public void updateTourRating(Long tourId) {

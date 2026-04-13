@@ -21,4 +21,24 @@ public interface VoucherService {
     List<swd.coiviet.model.UserVoucher> findClaimedVouchersByUserId(Long userId);
 
     List<Voucher> findActiveVouchersByTourId(Long tourId);
+
+    /**
+     * Kiểm tra user đã dùng voucher này chưa (1 voucher chỉ dùng 1 lần/account).
+     */
+    boolean hasUserUsedVoucher(Long userId, Long voucherId);
+
+    /**
+     * Ghi nhận user đã sử dụng voucher (dùng khi apply voucher vào booking).
+     */
+    void recordVoucherUsage(Long userId, Voucher voucher);
+
+    /**
+     * Lấy tất cả voucher user có thể dùng: voucher đã claim (chưa dùng) + voucher hệ thống (chưa dùng).
+     */
+    swd.coiviet.dto.response.AccountVouchersResponse findAvailableVouchersForUser(Long userId);
+
+    /**
+     * Lấy voucher hệ thống còn hiệu lực mà user chưa dùng.
+     */
+    List<Voucher> findActiveSystemVouchersNotUsedByUser(Long userId);
 }

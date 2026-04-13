@@ -241,9 +241,11 @@ public class UserLearnProgressServiceImpl implements UserLearnProgressService {
             }
         }
 
+        boolean alreadyClaimedForQuiz = attemptRepo.existsByUserIdAndQuizIdAndVoucherClaimedTrue(userId, quiz.getId());
         boolean canClaimVoucher = scorePercent.compareTo(BigDecimal.valueOf(100)) == 0
                 && quiz.getAchievementVoucher() != null
-                && !attempt.getVoucherClaimed();
+                && !attempt.getVoucherClaimed()
+                && !alreadyClaimedForQuiz;
 
         return QuizResultResponse.builder()
                 .attemptId(attempt.getId())
@@ -264,6 +266,9 @@ public class UserLearnProgressServiceImpl implements UserLearnProgressService {
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Lần làm quiz không tồn tại"));
         if (attempt.getVoucherClaimed()) {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Bạn đã nhận voucher rồi");
+        }
+        if (attemptRepo.existsByUserIdAndQuizIdAndVoucherClaimedTrue(userId, attempt.getQuiz().getId())) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Bạn đã nhận voucher cho bài quiz này rồi, mỗi bài quiz chỉ được nhận 1 voucher");
         }
         if (attempt.getScorePercent() == null || attempt.getScorePercent().compareTo(BigDecimal.valueOf(100)) != 0) {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Chỉ có thể nhận voucher khi đạt 100%");

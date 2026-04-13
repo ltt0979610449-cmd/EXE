@@ -4,15 +4,19 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import swd.coiviet.configuration.JwtUtil;
 import swd.coiviet.dto.response.ApiResponse;
 import swd.coiviet.dto.response.UploadResponse;
 import swd.coiviet.exception.AppException;
 import swd.coiviet.exception.ErrorCode;
+import swd.coiviet.model.User;
 import swd.coiviet.service.CloudinaryService;
+import swd.coiviet.service.UserService;
 
 import java.io.IOException;
 import java.util.List;
@@ -23,9 +27,13 @@ import java.util.List;
 public class UploadController {
 
     private final CloudinaryService cloudinaryService;
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
 
-    public UploadController(CloudinaryService cloudinaryService) {
+    public UploadController(CloudinaryService cloudinaryService, UserService userService, JwtUtil jwtUtil) {
         this.cloudinaryService = cloudinaryService;
+        this.userService = userService;
+        this.jwtUtil = jwtUtil;
     }
 
     /**
@@ -36,9 +44,17 @@ public class UploadController {
     public ResponseEntity<ApiResponse<UploadResponse>> uploadUserAvatar(
             @Parameter(description = "Avatar file", schema = @Schema(type = "string", format = "binary"))
             @RequestPart("file") MultipartFile file,
-            @RequestParam(value = "userId", required = false) Long userId) {
+            @RequestParam(value = "userId", required = false) Long userId,
+            HttpServletRequest request) {
         try {
-            String url = cloudinaryService.uploadUserAvatar(file, userId);
+            Long targetUserId = userId != null ? userId : getCurrentUserId(request);
+            String url = cloudinaryService.uploadUserAvatar(file, targetUserId);
+
+            User user = userService.findById(targetUserId)
+                    .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "User không tồn tại"));
+            user.setAvatarUrl(url);
+            userService.save(user);
+
             UploadResponse response = UploadResponse.builder()
                     .url(url)
                     .message("Upload avatar thành công")
@@ -47,6 +63,22 @@ public class UploadController {
         } catch (IOException e) {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR, "Lỗi khi upload avatar: " + e.getMessage());
         }
+    }
+
+    private Long getCurrentUserId(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new AppException(ErrorCode.UNAUTHORIZED, "Token không hợp lệ");
+        }
+        String token = authHeader.substring(7);
+        if (!jwtUtil.validateToken(token)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED, "Token không hợp lệ hoặc đã hết hạn");
+        }
+        Integer userId = jwtUtil.getClaims(token).get("userId", Integer.class);
+        if (userId == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED, "Token không chứa thông tin user");
+        }
+        return Long.valueOf(userId);
     }
 
     /**
