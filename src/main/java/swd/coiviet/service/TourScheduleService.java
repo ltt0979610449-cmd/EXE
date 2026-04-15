@@ -1,5 +1,6 @@
 package swd.coiviet.service;
 
+import swd.coiviet.enums.TourScheduleStatus;
 import swd.coiviet.model.TourSchedule;
 
 import java.time.LocalDate;
@@ -14,4 +15,6 @@ public interface TourScheduleService {
     List<TourSchedule> findByTourId(Long tourId);
     Optional<TourSchedule> findByTourIdAndTourDateAndStartTime(Long tourId, LocalDate tourDate, LocalTime startTime);
     void deleteById(Long id);
+    List<TourSchedule> findFutureSchedulesByArtisanId(Long artisanId);
+    List<TourSchedule> findFutureSchedulesByArtisanIdAndStatus(Long artisanId, TourScheduleStatus status);
 }

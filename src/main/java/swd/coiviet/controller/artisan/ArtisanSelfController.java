@@ -37,9 +37,9 @@ import swd.coiviet.service.TourService;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
@@ -264,6 +264,21 @@ public class ArtisanSelfController {
     }
 
     // ==================== TOUR SCHEDULES ====================
+
+    @GetMapping("/schedules")
+    @Operation(summary = "Tất cả lịch trong tương lai của nghệ nhân")
+    public ResponseEntity<ApiResponse<List<TourSchedule>>> getAllFutureSchedules(
+            @RequestParam(required = false) TourScheduleStatus status,
+            HttpServletRequest request) {
+        Artisan artisan = getCurrentArtisan(request);
+        List<TourSchedule> schedules;
+        if (status != null) {
+            schedules = tourScheduleService.findFutureSchedulesByArtisanIdAndStatus(artisan.getId(), status);
+        } else {
+            schedules = tourScheduleService.findFutureSchedulesByArtisanId(artisan.getId());
+        }
+        return ResponseEntity.ok(ApiResponse.success(schedules));
+    }
 
     @GetMapping("/tours/{tourId}/schedules")
     @Operation(summary = "Danh sách lịch của tour")

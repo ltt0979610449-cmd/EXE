@@ -30,4 +30,10 @@ public interface TourScheduleRepository extends JpaRepository<TourSchedule, Long
 
     @Query("SELECT DISTINCT ts.tour.id FROM TourSchedule ts WHERE ts.discountPercent IS NOT NULL AND ts.discountPercent > 0 AND ts.tourDate >= :fromDate AND ts.status = 'SCHEDULED'")
     List<Long> findDistinctTourIdsWithDiscount(@Param("fromDate") LocalDate fromDate);
+
+    @Query("SELECT ts FROM TourSchedule ts WHERE ts.tour.artisan.id = :artisanId AND ts.tourDate >= :today ORDER BY ts.tourDate ASC, ts.startTime ASC")
+    List<TourSchedule> findFutureSchedulesByArtisanId(@Param("artisanId") Long artisanId, @Param("today") LocalDate today);
+
+    @Query("SELECT ts FROM TourSchedule ts WHERE ts.tour.artisan.id = :artisanId AND ts.tourDate >= :today AND ts.status = :status ORDER BY ts.tourDate ASC, ts.startTime ASC")
+    List<TourSchedule> findFutureSchedulesByArtisanIdAndStatus(@Param("artisanId") Long artisanId, @Param("today") LocalDate today, @Param("status") TourScheduleStatus status);
 }
